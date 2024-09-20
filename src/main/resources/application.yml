@@ -1,0 +1,43 @@
+server:
+  port: 8081
+  servlet:
+    encoding:
+      charset: utf-8
+      enabled: true
+      force: true
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/sied_clients_v3
+    username: postgres
+    password: 123456789
+  jpa:
+    hibernate:
+      ddl-auto: update
+      format_sql: true
+      show-sql: true
+      dialect: org.hibernate.dialect.PostgreSQLDialect
+    naming:
+      physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+
+  jackson:
+    time-zone: America/Mexico_City
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+security:
+  jwt:
+    expiration-minutes: 420
+    secret-key: uyar+xfH78IuP+U1HPx7X0l8S1/YSM+Jq/2kOoVTwgb9BL1OFVj3IuDlRBy/Qjgj
+
+hashids:
+  salt: gateway
+  length: 10
