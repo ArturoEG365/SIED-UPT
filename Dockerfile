@@ -1,0 +1,5 @@
+FROM postgres:13.2-alpine
+
+ENV POSTGRES_USER postgres
+ENV POSTGRES_PASSWORD 123456789
+ENV POSTGRES_DB sied_clients_v3
