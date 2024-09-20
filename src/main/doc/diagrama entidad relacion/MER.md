@@ -1,3 +1,5 @@
+```mermaid
+
 erDiagram
 
     addresses {
@@ -182,3 +184,5 @@ joint_obligors ||--o| clients: "id_client"
 referencess ||--o| clients: "id_client"
 related_pep ||--o| individual_clients: "id_individual_client"
 shareholders ||--o| corporate_clients: "id_corporate_client"
+
+```
