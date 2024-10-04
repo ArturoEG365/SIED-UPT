@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.concurrent.CompletableFuture;
 
 @RequestMapping(ApiVersion.V3 + "/shareholders")
 @RestController
@@ -24,48 +25,83 @@ public class ShareholderCrudController {
         this.messageService = messageService;
     }
 
-    public ResponseEntity<ApiCustomResponse<ShareholderCrudResponseDto>> create(
+    @PostMapping
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ShareholderCrudResponseDto>>> create(
             @Validated @RequestBody ShareholderCrudRequestDto request
     ) {
-        ShareholderCrudResponseDto shareholder = shareholderCrudService.create(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiCustomResponse<>(HttpStatus.CREATED.getReasonPhrase(), HttpStatus.CREATED.value(), messageService.getMessage("shareholder.controller.create.successfully"), shareholder));
+        return shareholderCrudService.create(request).thenApply(shareholder ->
+                ResponseEntity.status(HttpStatus.CREATED).body(
+                        new ApiCustomResponse<>(
+                                HttpStatus.CREATED.getReasonPhrase(),
+                                HttpStatus.CREATED.value(),
+                                messageService.getMessage("shareholder.controller.create.successfully"),
+                                shareholder
+                        )
+                )
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<ShareholderCrudResponseDto>> get(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ShareholderCrudResponseDto>>> get(
             @PathVariable Long id
     ) {
-        ShareholderCrudResponseDto shareholder = shareholderCrudService.get(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("shareholder.controller.get.successfully"), shareholder));
+        return shareholderCrudService.get(id).thenApply(shareholder ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("shareholder.controller.get.successfully"),
+                                shareholder
+                        )
+                )
+        );
     }
 
     @GetMapping
-    public ResponseEntity<ApiCustomResponse<PaginatedResponse<ShareholderCrudResponseDto>>> getAll(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<ShareholderCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PaginatedResponse<ShareholderCrudResponseDto> shareholder = shareholderCrudService.getAll(offset, limit);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("shareholder.controller.getAll.successfully"), shareholder));
+        return shareholderCrudService.getAll(offset, limit).thenApply(shareholders ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("shareholder.controller.getAll.successfully"),
+                                shareholders
+                        )
+                )
+        );
     }
 
     @PutMapping
-    public ResponseEntity<ApiCustomResponse<ShareholderCrudResponseDto>> update(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ShareholderCrudResponseDto>>> update(
             @Validated @RequestBody ShareholderCrudUpdateRequestDto request
     ) {
-        ShareholderCrudResponseDto shareholder = shareholderCrudService.update(request);
-        ApiCustomResponse<ShareholderCrudResponseDto> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("shareholder.controller.update.successfully"), shareholder);
-        return ResponseEntity.ok(response);
+        return shareholderCrudService.update(request).thenApply(shareholder ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                "Success",
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("shareholder.controller.update.successfully"),
+                                shareholder
+                        )
+                )
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<Void>> delete(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
     ) {
-        shareholderCrudService.delete(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("shareholder.controller.delete.successfully")));
+        return shareholderCrudService.delete(id).thenApply(voidResult ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("shareholder.controller.delete.successfully")
+                        )
+                )
+        );
     }
 }
