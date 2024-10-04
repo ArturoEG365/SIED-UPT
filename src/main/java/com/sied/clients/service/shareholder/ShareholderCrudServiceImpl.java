@@ -14,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -39,13 +41,14 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
         this.messageService = messageService;
     }
 
+    @Async
     @Override
-    public ShareholderCrudResponseDto create(ShareholderCrudRequestDto request) {
+    public CompletableFuture<ShareholderCrudResponseDto> create(ShareholderCrudRequestDto request) {
         try {
-            log.debug("Creating {}", entityName);
+            log.debug("Creating {} asynchronously", entityName);
             Shareholder shareholder = toEntity(request);
             shareholder = shareholderRepository.save(shareholder);
-            return toResponseDto(shareholder);
+            return CompletableFuture.completedFuture(toResponseDto(shareholder));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -53,25 +56,28 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
         }
     }
 
+    @Async
     @Override
-    public PaginatedResponse<ShareholderCrudResponseDto> getAll(int offset, int limit) {
+    public CompletableFuture<PaginatedResponse<ShareholderCrudResponseDto>> getAll(int offset, int limit) {
         try {
-            log.debug("Retrieving all {}s", entityName);
-            Page<Shareholder> shareholder = shareholderRepository.findAll(PageRequest.of(offset, limit));
-            List<ShareholderCrudResponseDto> shareholderCrudResponseDtos = shareholder.map(this::toResponseDto).toList();
-            return new PaginatedResponse<>(shareholder.getTotalElements(), shareholder.getTotalPages(), shareholderCrudResponseDtos);
+            log.debug("Retrieving all {}s asynchronously", entityName);
+            Page<Shareholder> shareholderPage = shareholderRepository.findAll(PageRequest.of(offset, limit));
+            List<ShareholderCrudResponseDto> shareholderCrudResponseDtos = shareholderPage.map(this::toResponseDto).toList();
+            PaginatedResponse<ShareholderCrudResponseDto> response = new PaginatedResponse<>(shareholderPage.getTotalElements(), shareholderPage.getTotalPages(), shareholderCrudResponseDtos);
+            return CompletableFuture.completedFuture(response);
         } catch (Exception e) {
             throw handleUnexpectedException("retrieving", e);
         }
     }
 
+    @Async
     @Override
-    public ShareholderCrudResponseDto get(Long id) {
+    public CompletableFuture<ShareholderCrudResponseDto> get(Long id) {
         try {
-            log.debug("Retrieving {} with ID: {}", entityName, id);
+            log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
             Shareholder shareholder = shareholderRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{id})));
-            return toResponseDto(shareholder);
+            return CompletableFuture.completedFuture(toResponseDto(shareholder));
         } catch (EntityNotFoundException e) {
             log.error("Error retrieving {}: {}", entityName, e.getMessage());
             throw e;
@@ -80,16 +86,17 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
         }
     }
 
+    @Async
     @Override
-    public ShareholderCrudResponseDto update(ShareholderCrudUpdateRequestDto request) {
+    public CompletableFuture<ShareholderCrudResponseDto> update(ShareholderCrudUpdateRequestDto request) {
         try {
-            log.debug("Updating {} with id {}", entityName, request.getId());
-            Shareholder shareholder = shareholderRepository.findById(request.getId()).
-                    orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{request.getId()})));
+            log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+            Shareholder shareholder = shareholderRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{request.getId()})));
             Shareholder updateShareholder = toEntity(request);
             updateShareholder.setId(shareholder.getId());
             updateShareholder = shareholderRepository.save(updateShareholder);
-            return toResponseDto(updateShareholder);
+            return CompletableFuture.completedFuture(toResponseDto(updateShareholder));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -97,13 +104,15 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
         }
     }
 
+    @Async
     @Override
-    public void delete(Long id) {
+    public CompletableFuture<Void> delete(Long id) {
         try {
-            log.debug("Deleting {} with ID: {}", entityName, id);
+            log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
             Shareholder shareholder = shareholderRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{id})));
             shareholderRepository.delete(shareholder);
+            return CompletableFuture.completedFuture(null);
         } catch (EntityNotFoundException e) {
             log.error("Error deleting {}: {}", entityName, e.getMessage());
             throw e;
