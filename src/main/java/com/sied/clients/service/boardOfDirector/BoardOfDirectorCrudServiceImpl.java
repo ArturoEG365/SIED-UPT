@@ -44,16 +44,20 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
     @Async
     @Override
     public CompletableFuture<BoardOfDirectorCrudResponseDto> create(BoardOfDirectorCrudRequestDto request) {
-        try {
-            log.debug("Creating {} asynchronously", entityName);
-            BoardOfDirector boardOfDirector = toEntity(request);
-            boardOfDirector = boardOfDirectorRepository.save(boardOfDirector);
-            return CompletableFuture.completedFuture(toResponseDto(boardOfDirector));
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("creating", e);
-        }
+        log.debug("Creating {} asynchronously", entityName);
+        return toEntity(request)
+                .thenCompose(boardOfDirector -> CompletableFuture.supplyAsync(() -> {
+                    BoardOfDirector savedBoardOfDirector = boardOfDirectorRepository.save(boardOfDirector);
+                    return toResponseDto(savedBoardOfDirector);
+                }))
+                .exceptionally(ex -> {
+                    Throwable cause = ex.getCause();
+                    if (cause instanceof EntityNotFoundException) {
+                        throw (EntityNotFoundException) cause;
+                    } else {
+                        throw handleUnexpectedException("creating", (Exception) cause);
+                    }
+                });
     }
 
     @Async
@@ -73,63 +77,81 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
     @Async
     @Override
     public CompletableFuture<BoardOfDirectorCrudResponseDto> get(Long id) {
-        try {
+        return CompletableFuture.supplyAsync(() -> {
             log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
             BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{id})));
-            return CompletableFuture.completedFuture(toResponseDto(boardOfDirector));
-        } catch (EntityNotFoundException e) {
-            log.error("Error retrieving {}: {}", entityName, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("retrieving", e);
-        }
+            return toResponseDto(boardOfDirector);
+        }).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("retrieving", (Exception) cause);
+            }
+        });
     }
 
     @Async
     @Override
     public CompletableFuture<BoardOfDirectorCrudResponseDto> update(BoardOfDirectorCrudUpdateRequestDto request) {
-        try {
-            log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+        log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+        return CompletableFuture.supplyAsync(() -> {
             BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(request.getId())
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{request.getId()})));
-            BoardOfDirector updateBoardOfDirector = toEntity(request);
-            updateBoardOfDirector.setId(boardOfDirector.getId());
-            updateBoardOfDirector = boardOfDirectorRepository.save(updateBoardOfDirector);
-            return CompletableFuture.completedFuture(toResponseDto(updateBoardOfDirector));
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("updating", e);
-        }
+            return boardOfDirector;
+        }).thenCompose(existingBoardOfDirector -> toEntity(request)
+                .thenCompose(updatedBoardOfDirector -> CompletableFuture.supplyAsync(() -> {
+                    updatedBoardOfDirector.setId(existingBoardOfDirector.getId());
+                    BoardOfDirector savedBoardOfDirector = boardOfDirectorRepository.save(updatedBoardOfDirector);
+                    return toResponseDto(savedBoardOfDirector);
+                }))
+        ).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("updating", (Exception) cause);
+            }
+        });
     }
 
     @Async
     @Override
     public CompletableFuture<Void> delete(Long id) {
-        try {
+        return CompletableFuture.runAsync(() -> {
             log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
             BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{id})));
             boardOfDirectorRepository.delete(boardOfDirector);
-            return CompletableFuture.completedFuture(null);
-        } catch (EntityNotFoundException e) {
-            log.error("Error deleting {}: {}", entityName, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("deleting", e);
-        }
+        }).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("deleting", (Exception) cause);
+            }
+        });
     }
 
-    private BoardOfDirector toEntity(BoardOfDirectorCrudRequestDto request) {
+    private CompletableFuture<BoardOfDirector> toEntity(BoardOfDirectorCrudRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        CorporateClient corporateClient = corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client());
+        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+                .thenApply(corporateClient -> BoardOfDirector.builder()
+                        .id_corporate_client(corporateClient)
+                        .name(request.getName())
+                        .position(request.getPosition())
+                        .build());
+    }
 
-        return BoardOfDirector.builder()
-                .id_corporate_client(corporateClient)
-                .name(request.getName())
-                .position(request.getPosition())
-                .build();
+    private CompletableFuture<BoardOfDirector> toEntity(BoardOfDirectorCrudUpdateRequestDto request) {
+        log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
+        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+                .thenApply(corporateClient -> BoardOfDirector.builder()
+                        .id_corporate_client(corporateClient)
+                        .name(request.getName())
+                        .position(request.getPosition())
+                        .build());
     }
 
     private BoardOfDirectorCrudResponseDto toResponseDto(BoardOfDirector boardOfDirector) {
@@ -148,6 +170,6 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
 
     private RuntimeException handleUnexpectedException(String action, Exception e) {
         log.error("Error {} {}: {}", action, entityName, e.getMessage());
-        return new RuntimeException("Unexpected error while " + action + " " + entityName);
+        return new RuntimeException("Unexpected error while " + action + " " + entityName, e);
     }
 }

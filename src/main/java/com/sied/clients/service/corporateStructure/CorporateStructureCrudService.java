@@ -5,15 +5,17 @@ import com.sied.clients.dto.corporateStructure.request.CorporateStructureCrudReq
 import com.sied.clients.dto.corporateStructure.request.CorporateStructureCrudUpdateRequestDto;
 import com.sied.clients.dto.corporateStructure.response.CorporateStructureCrudResponseDto;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface CorporateStructureCrudService {
 
-    CorporateStructureCrudResponseDto create(CorporateStructureCrudRequestDto request);
+    CompletableFuture<CorporateStructureCrudResponseDto> create(CorporateStructureCrudRequestDto request);
 
-    PaginatedResponse<CorporateStructureCrudResponseDto> getAll(int offset, int limit);
+    CompletableFuture<PaginatedResponse<CorporateStructureCrudResponseDto>> getAll(int offset, int limit);
 
-    CorporateStructureCrudResponseDto get(Long id);
+    CompletableFuture<CorporateStructureCrudResponseDto> get(Long id);
 
-    CorporateStructureCrudResponseDto update(CorporateStructureCrudUpdateRequestDto request);
+    CompletableFuture<CorporateStructureCrudResponseDto> update(CorporateStructureCrudUpdateRequestDto request);
 
-    void delete(Long id);
+    CompletableFuture<Void> delete(Long id);
 }

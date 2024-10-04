@@ -44,16 +44,20 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
     @Async
     @Override
     public CompletableFuture<ShareholderCrudResponseDto> create(ShareholderCrudRequestDto request) {
-        try {
-            log.debug("Creating {} asynchronously", entityName);
-            Shareholder shareholder = toEntity(request);
-            shareholder = shareholderRepository.save(shareholder);
-            return CompletableFuture.completedFuture(toResponseDto(shareholder));
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("creating", e);
-        }
+        log.debug("Creating {} asynchronously", entityName);
+        return toEntity(request)
+                .thenCompose(shareholder -> CompletableFuture.supplyAsync(() -> {
+                    Shareholder savedShareholder = shareholderRepository.save(shareholder);
+                    return toResponseDto(savedShareholder);
+                }))
+                .exceptionally(ex -> {
+                    Throwable cause = ex.getCause();
+                    if (cause instanceof EntityNotFoundException) {
+                        throw (EntityNotFoundException) cause;
+                    } else {
+                        throw handleUnexpectedException("creating", (Exception) cause);
+                    }
+                });
     }
 
     @Async
@@ -73,67 +77,85 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
     @Async
     @Override
     public CompletableFuture<ShareholderCrudResponseDto> get(Long id) {
-        try {
+        return CompletableFuture.supplyAsync(() -> {
             log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
             Shareholder shareholder = shareholderRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{id})));
-            return CompletableFuture.completedFuture(toResponseDto(shareholder));
-        } catch (EntityNotFoundException e) {
-            log.error("Error retrieving {}: {}", entityName, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("retrieving", e);
-        }
+            return toResponseDto(shareholder);
+        }).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("retrieving", (Exception) cause);
+            }
+        });
     }
 
     @Async
     @Override
     public CompletableFuture<ShareholderCrudResponseDto> update(ShareholderCrudUpdateRequestDto request) {
-        try {
-            log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
-            Shareholder shareholder = shareholderRepository.findById(request.getId())
+        log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+        return CompletableFuture.supplyAsync(() -> {
+            Shareholder existingShareholder = shareholderRepository.findById(request.getId())
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{request.getId()})));
-            Shareholder updateShareholder = toEntity(request);
-            updateShareholder.setId(shareholder.getId());
-            updateShareholder = shareholderRepository.save(updateShareholder);
-            return CompletableFuture.completedFuture(toResponseDto(updateShareholder));
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("updating", e);
-        }
+            return existingShareholder;
+        }).thenCompose(existingShareholder -> toEntity(request)
+                .thenCompose(updatedShareholder -> CompletableFuture.supplyAsync(() -> {
+                    updatedShareholder.setId(existingShareholder.getId());
+                    Shareholder savedShareholder = shareholderRepository.save(updatedShareholder);
+                    return toResponseDto(savedShareholder);
+                }))
+        ).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("updating", (Exception) cause);
+            }
+        });
     }
 
     @Async
     @Override
     public CompletableFuture<Void> delete(Long id) {
-        try {
+        return CompletableFuture.runAsync(() -> {
             log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
             Shareholder shareholder = shareholderRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("shareholder.service.invalid.shareholder", new Object[]{id})));
             shareholderRepository.delete(shareholder);
-            return CompletableFuture.completedFuture(null);
-        } catch (EntityNotFoundException e) {
-            log.error("Error deleting {}: {}", entityName, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("deleting", e);
-        }
+        }).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("deleting", (Exception) cause);
+            }
+        });
     }
 
-    private Shareholder toEntity(ShareholderCrudRequestDto request) {
-        log.debug("Mapping {} to {} entity", requestDto, entityName);
-        CorporateClient corporateClient = corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client());
+    private CompletableFuture<Shareholder> toEntity(ShareholderCrudRequestDto request) {
+        log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
+        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+                .thenApply(corporateClient -> Shareholder.builder()
+                        .id_corporate_client(corporateClient)
+                        .name(request.getName())
+                        .ownershipPercentage(request.getOwnershipPercentage())
+                        .build());
+    }
 
-        return Shareholder.builder()
-                .id_corporate_client(corporateClient)
-                .name(request.getName())
-                .ownershipPercentage(request.getOwnershipPercentage())
-                .build();
+    private CompletableFuture<Shareholder> toEntity(ShareholderCrudUpdateRequestDto request) {
+        log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
+        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+                .thenApply(corporateClient -> Shareholder.builder()
+                        .id_corporate_client(corporateClient)
+                        .name(request.getName())
+                        .ownershipPercentage(request.getOwnershipPercentage())
+                        .build());
     }
 
     private ShareholderCrudResponseDto toResponseDto(Shareholder shareholder) {
-        log.debug("Mapping {} entity to {}", entityName, responseDto);
+        log.debug("Mapping {} entity to {} asynchronously", entityName, responseDto);
 
         return ShareholderCrudResponseDto.builder()
                 .id(shareholder.getId())
@@ -148,6 +170,6 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
 
     private RuntimeException handleUnexpectedException(String action, Exception e) {
         log.error("Error {} {}: {}", action, entityName, e.getMessage());
-        return new RuntimeException("Unexpected error while " + action + " " + entityName);
+        return new RuntimeException("Unexpected error while " + action + " " + entityName, e);
     }
 }

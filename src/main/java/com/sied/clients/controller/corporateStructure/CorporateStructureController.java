@@ -13,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping(ApiVersion.V3 +"/corporate-structure")
+import java.util.concurrent.CompletableFuture;
+
+@RequestMapping(ApiVersion.V3 + "/corporate-structure")
 @RestController
 public class CorporateStructureController {
     private final CorporateStructureCrudService corporateStructureCrudService;
@@ -24,48 +26,73 @@ public class CorporateStructureController {
         this.messageService = messageService;
     }
 
-    public ResponseEntity<ApiCustomResponse<CorporateStructureCrudResponseDto>> create(
+    @PostMapping
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateStructureCrudResponseDto>>> create(
             @Validated @RequestBody CorporateStructureCrudRequestDto request
     ) {
-        CorporateStructureCrudResponseDto corporateStructure = corporateStructureCrudService.create(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiCustomResponse<>(HttpStatus.CREATED.getReasonPhrase(), HttpStatus.CREATED.value(), messageService.getMessage("corporateStructure.controller.create.successfully"), corporateStructure));
+        return corporateStructureCrudService.create(request)
+                .thenApply(corporateStructure -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(new ApiCustomResponse<>(
+                                HttpStatus.CREATED.getReasonPhrase(),
+                                HttpStatus.CREATED.value(),
+                                messageService.getMessage("corporateStructure.controller.create.successfully"),
+                                corporateStructure
+                        )));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<CorporateStructureCrudResponseDto>> get(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateStructureCrudResponseDto>>> get(
             @PathVariable Long id
     ) {
-        CorporateStructureCrudResponseDto corporateStructure = corporateStructureCrudService.get(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("corporateStructure.controller.get.successfully"), corporateStructure));
+        return corporateStructureCrudService.get(id)
+                .thenApply(corporateStructure -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateStructure.controller.get.successfully"),
+                                corporateStructure
+                        )));
     }
 
     @GetMapping
-    public ResponseEntity<ApiCustomResponse<PaginatedResponse<CorporateStructureCrudResponseDto>>> getAll(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<CorporateStructureCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PaginatedResponse<CorporateStructureCrudResponseDto> corporateStructure = corporateStructureCrudService.getAll(offset, limit);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("corporateStructure.controller.getAll.successfully"), corporateStructure));
+        return corporateStructureCrudService.getAll(offset, limit)
+                .thenApply(corporateStructures -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateStructure.controller.getAll.successfully"),
+                                corporateStructures
+                        )));
     }
 
     @PutMapping
-    public ResponseEntity<ApiCustomResponse<CorporateStructureCrudResponseDto>> update(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateStructureCrudResponseDto>>> update(
             @Validated @RequestBody CorporateStructureCrudUpdateRequestDto request
     ) {
-        CorporateStructureCrudResponseDto corporateStructure = corporateStructureCrudService.update(request);
-        ApiCustomResponse<CorporateStructureCrudResponseDto> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("corporateStructure.controller.update.successfully"), corporateStructure);
-        return ResponseEntity.ok(response);
+        return corporateStructureCrudService.update(request)
+                .thenApply(corporateStructure -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                "Success",
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateStructure.controller.update.successfully"),
+                                corporateStructure
+                        )));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<Void>> delete(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
     ) {
-        corporateStructureCrudService.delete(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("corporateStructure.controller.delete.successfully")));
+        return corporateStructureCrudService.delete(id)
+                .thenApply(aVoid -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateStructure.controller.delete.successfully")
+                        )));
     }
 }

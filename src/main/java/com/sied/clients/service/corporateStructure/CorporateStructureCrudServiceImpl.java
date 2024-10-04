@@ -1,22 +1,23 @@
 package com.sied.clients.service.corporateStructure;
 
 import com.sied.clients.base.responses.PaginatedResponse;
+import com.sied.clients.dto.corporateStructure.request.CorporateStructureCrudRequestDto;
+import com.sied.clients.dto.corporateStructure.request.CorporateStructureCrudUpdateRequestDto;
 import com.sied.clients.dto.corporateStructure.response.CorporateStructureCrudResponseDto;
-import com.sied.clients.entity.corporateClient.CorporateClient;
 import com.sied.clients.entity.corporateStructure.CorporateStructure;
 import com.sied.clients.exceptions.global.EntityNotFoundException;
 import com.sied.clients.repository.corporateStructure.CorporateStructureRepository;
-import com.sied.clients.dto.corporateStructure.request.CorporateStructureCrudRequestDto;
-import com.sied.clients.dto.corporateStructure.request.CorporateStructureCrudUpdateRequestDto;
 import com.sied.clients.service.corporateClient.CorporateClientValidationService;
 import com.sied.clients.util.security.MessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -39,86 +40,117 @@ public class CorporateStructureCrudServiceImpl implements CorporateStructureCrud
         this.messageService = messageService;
     }
 
+    @Async
     @Override
-    public CorporateStructureCrudResponseDto create(CorporateStructureCrudRequestDto request) {
-        try {
-            log.debug("Creating {}", entityName);
-            CorporateStructure corporateStructure = toEntity(request);
-            corporateStructure = corporateStructureRepository.save(corporateStructure);
-            return toResponseDto(corporateStructure);
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("creating", e);
-        }
+    public CompletableFuture<CorporateStructureCrudResponseDto> create(CorporateStructureCrudRequestDto request) {
+        log.debug("Creating {} asynchronously", entityName);
+        return toEntity(request)
+                .thenCompose(corporateStructure -> CompletableFuture.supplyAsync(() -> {
+                    CorporateStructure savedStructure = corporateStructureRepository.save(corporateStructure);
+                    return toResponseDto(savedStructure);
+                }))
+                .exceptionally(ex -> {
+                    Throwable cause = ex.getCause();
+                    if (cause instanceof EntityNotFoundException) {
+                        throw (EntityNotFoundException) cause;
+                    } else {
+                        throw handleUnexpectedException("creating", (Exception) cause);
+                    }
+                });
     }
 
+    @Async
     @Override
-    public PaginatedResponse<CorporateStructureCrudResponseDto> getAll(int offset, int limit) {
+    public CompletableFuture<PaginatedResponse<CorporateStructureCrudResponseDto>> getAll(int offset, int limit) {
         try {
-            log.debug("Retrieving all {}", entityName);
-            Page<CorporateStructure> CorporateStructure = corporateStructureRepository.findAll(PageRequest.of(offset, limit));
-            List<CorporateStructureCrudResponseDto> corporateStructureCrudResponseDtos = CorporateStructure.map(this::toResponseDto).toList();
-            return new PaginatedResponse<>(CorporateStructure.getTotalElements(), CorporateStructure.getTotalPages(), corporateStructureCrudResponseDtos);
+            log.debug("Retrieving all {} asynchronously", entityName);
+            Page<CorporateStructure> corporateStructurePage = corporateStructureRepository.findAll(PageRequest.of(offset, limit));
+            List<CorporateStructureCrudResponseDto> responseDtos = corporateStructurePage.map(this::toResponseDto).toList();
+            PaginatedResponse<CorporateStructureCrudResponseDto> response = new PaginatedResponse<>(corporateStructurePage.getTotalElements(), corporateStructurePage.getTotalPages(), responseDtos);
+            return CompletableFuture.completedFuture(response);
         } catch (Exception e) {
             throw handleUnexpectedException("retrieving all", e);
         }
     }
 
+    @Async
     @Override
-    public CorporateStructureCrudResponseDto get(Long id) {
-        try {
-            log.debug("Retrieving {} with ID: {}", entityName, id);
+    public CompletableFuture<CorporateStructureCrudResponseDto> get(Long id) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
             CorporateStructure corporateStructure = corporateStructureRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateStructure.service.invalid.corporateStructure", new Object[]{id})));
             return toResponseDto(corporateStructure);
-        } catch (EntityNotFoundException e) {
-            log.error("Error retrieving {}: {}", entityName, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("retrieving", e);
-        }
+        }).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("retrieving", (Exception) cause);
+            }
+        });
     }
 
+    @Async
     @Override
-    public CorporateStructureCrudResponseDto update(CorporateStructureCrudUpdateRequestDto request) {
-        try {
-            log.debug("Updating {} with id {}", entityName, request.getId());
-            CorporateStructure corporateStructure = corporateStructureRepository.findById(request.getId()).
-                    orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateStructure.service.invalid.corporateStructure", new Object[]{request.getId()})));
-            CorporateStructure updateCorporateStructure = toEntity(request);
-            updateCorporateStructure.setId(corporateStructure.getId());
-            updateCorporateStructure = corporateStructureRepository.save(updateCorporateStructure);
-            return toResponseDto(updateCorporateStructure);
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("updating", e);
-        }
+    public CompletableFuture<CorporateStructureCrudResponseDto> update(CorporateStructureCrudUpdateRequestDto request) {
+        log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+        return CompletableFuture.supplyAsync(() -> {
+            CorporateStructure existingStructure = corporateStructureRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateStructure.service.invalid.corporateStructure", new Object[]{request.getId()})));
+            return existingStructure;
+        }).thenCompose(existingStructure -> toEntity(request)
+                .thenCompose(updatedStructure -> CompletableFuture.supplyAsync(() -> {
+                    updatedStructure.setId(existingStructure.getId());
+                    CorporateStructure savedStructure = corporateStructureRepository.save(updatedStructure);
+                    return toResponseDto(savedStructure);
+                }))
+        ).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("updating", (Exception) cause);
+            }
+        });
     }
 
+    @Async
     @Override
-    public void delete(Long id) {
-        try {
-            log.debug("Deleting {} with ID: {}", entityName, id);
+    public CompletableFuture<Void> delete(Long id) {
+        return CompletableFuture.runAsync(() -> {
+            log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
             CorporateStructure corporateStructure = corporateStructureRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateStructure.service.invalid.corporateStructure", new Object[]{id})));
             corporateStructureRepository.delete(corporateStructure);
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("deleting", e);
-        }
+        }).exceptionally(ex -> {
+            Throwable cause = ex.getCause();
+            if (cause instanceof EntityNotFoundException) {
+                throw (EntityNotFoundException) cause;
+            } else {
+                throw handleUnexpectedException("deleting", (Exception) cause);
+            }
+        });
     }
 
-    private CorporateStructure toEntity(CorporateStructureCrudRequestDto request) {
-        log.debug("Mapping {} to entity", requestDto, entityName);
-        CorporateClient corporateClient = corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client());
-        return CorporateStructure.builder()
-                .id_corporate_client(corporateClient)
-                .name(request.getName())
-                .position(request.getPosition())
-                .build();
+    private CompletableFuture<CorporateStructure> toEntity(CorporateStructureCrudRequestDto request) {
+        log.debug("Mapping {} to entity asynchronously", requestDto);
+        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+                .thenApply(corporateClient -> CorporateStructure.builder()
+                        .id_corporate_client(corporateClient)
+                        .name(request.getName())
+                        .position(request.getPosition())
+                        .build());
+    }
+
+    private CompletableFuture<CorporateStructure> toEntity(CorporateStructureCrudUpdateRequestDto request) {
+        log.debug("Mapping {} to entity asynchronously", requestDto);
+        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+                .thenApply(corporateClient -> CorporateStructure.builder()
+                        .id_corporate_client(corporateClient)
+                        .name(request.getName())
+                        .position(request.getPosition())
+                        .build());
     }
 
     private CorporateStructureCrudResponseDto toResponseDto(CorporateStructure corporateStructure) {
@@ -136,6 +168,6 @@ public class CorporateStructureCrudServiceImpl implements CorporateStructureCrud
 
     private RuntimeException handleUnexpectedException(String action, Exception e) {
         log.error("Error {} {}: {}", action, entityName, e.getMessage());
-        return new RuntimeException("Unexpected error while " + action + " " + entityName);
+        return new RuntimeException("Unexpected error while " + action + " " + entityName, e);
     }
 }

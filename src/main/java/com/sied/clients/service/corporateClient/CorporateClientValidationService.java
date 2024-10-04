@@ -3,7 +3,9 @@ package com.sied.clients.service.corporateClient;
 import com.sied.clients.entity.corporateClient.CorporateClient;
 import com.sied.clients.exceptions.global.EntityNotFoundException;
 import com.sied.clients.repository.corporateClient.CorporateClientRepository;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class CorporateClientValidationService {
@@ -13,8 +15,11 @@ public class CorporateClientValidationService {
         this.corporateClientRepository = corporateClientRepository;
     }
 
-    public CorporateClient validateCorporateClientExists(Long id) {
-        return corporateClientRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("CorporateClient with id " + id + " does not exist."));
+    @Async
+    public CompletableFuture<CorporateClient> validateCorporateClientExists(Long id) {
+        return CompletableFuture.supplyAsync(() ->
+                corporateClientRepository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException("CorporateClient with id " + id + " does not exist."))
+        );
     }
 }
