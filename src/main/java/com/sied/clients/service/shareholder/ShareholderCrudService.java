@@ -4,15 +4,16 @@ import com.sied.clients.base.responses.PaginatedResponse;
 import com.sied.clients.dto.shareholder.request.ShareholderCrudRequestDto;
 import com.sied.clients.dto.shareholder.request.ShareholderCrudUpdateRequestDto;
 import com.sied.clients.dto.shareholder.response.ShareholderCrudResponseDto;
+import java.util.concurrent.CompletableFuture;
 
 public interface ShareholderCrudService {
-    ShareholderCrudResponseDto create(ShareholderCrudRequestDto request);
+    CompletableFuture<ShareholderCrudResponseDto> create(ShareholderCrudRequestDto request);
 
-    PaginatedResponse<ShareholderCrudResponseDto> getAll(int offset, int limit);
+    CompletableFuture<PaginatedResponse<ShareholderCrudResponseDto>> getAll(int offset, int limit);
 
-    ShareholderCrudResponseDto get(Long id);
+    CompletableFuture<ShareholderCrudResponseDto> get(Long id);
 
-    ShareholderCrudResponseDto update(ShareholderCrudUpdateRequestDto request);
+    CompletableFuture<ShareholderCrudResponseDto> update(ShareholderCrudUpdateRequestDto request);
 
-    void delete(Long id);
+    CompletableFuture<Void> delete(Long id);
 }
