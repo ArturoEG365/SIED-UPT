@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.concurrent.CompletableFuture;
 
 @RequestMapping(ApiVersion.V3 + "/board_of_directors")
 @RestController
@@ -25,48 +26,82 @@ public class BoardOfDirectorController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>> create(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>>> create(
             @Validated @RequestBody BoardOfDirectorCrudRequestDto request
     ) {
-        BoardOfDirectorCrudResponseDto boardOfDirector = boardOfDirectorCrudService.create(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiCustomResponse<>(HttpStatus.CREATED.getReasonPhrase(), HttpStatus.CREATED.value(), messageService.getMessage("boardOfDirector.controller.create.successfully"), boardOfDirector));
+        return boardOfDirectorCrudService.create(request).thenApply(boardOfDirector ->
+                ResponseEntity.status(HttpStatus.CREATED).body(
+                        new ApiCustomResponse<>(
+                                HttpStatus.CREATED.getReasonPhrase(),
+                                HttpStatus.CREATED.value(),
+                                messageService.getMessage("boardOfDirector.controller.create.successfully"),
+                                boardOfDirector
+                        )
+                )
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>> get(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>>> get(
             @PathVariable Long id
     ) {
-        BoardOfDirectorCrudResponseDto boardOfDirector = boardOfDirectorCrudService.get(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("boardOfDirector.controller.get.successfully"), boardOfDirector));
+        return boardOfDirectorCrudService.get(id).thenApply(boardOfDirector ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("boardOfDirector.controller.get.successfully"),
+                                boardOfDirector
+                        )
+                )
+        );
     }
 
     @GetMapping
-    public ResponseEntity<ApiCustomResponse<PaginatedResponse<BoardOfDirectorCrudResponseDto>>> getAll(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<BoardOfDirectorCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PaginatedResponse<BoardOfDirectorCrudResponseDto> boardOfDirector = boardOfDirectorCrudService.getAll(offset, limit);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("boardOfDirector.controller.getAll.successfully"), boardOfDirector));
+        return boardOfDirectorCrudService.getAll(offset, limit).thenApply(boardOfDirectors ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("boardOfDirector.controller.getAll.successfully"),
+                                boardOfDirectors
+                        )
+                )
+        );
     }
 
     @PutMapping
-    public ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>> update(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>>> update(
             @Validated @RequestBody BoardOfDirectorCrudUpdateRequestDto request
     ) {
-        BoardOfDirectorCrudResponseDto boardOfDirector = boardOfDirectorCrudService.update(request);
-        ApiCustomResponse<BoardOfDirectorCrudResponseDto> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("boardOfDirector.controller.update.successfully"), boardOfDirector);
-        return ResponseEntity.ok(response);
+        return boardOfDirectorCrudService.update(request).thenApply(boardOfDirector ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                "Success",
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("boardOfDirector.controller.update.successfully"),
+                                boardOfDirector
+                        )
+                )
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<Void>> delete(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
     ) {
-        boardOfDirectorCrudService.delete(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("boardOfDirector.controller.delete.successfully")));
+        return boardOfDirectorCrudService.delete(id).thenApply(voidResult ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("boardOfDirector.controller.delete.successfully")
+                        )
+                )
+        );
     }
 }
