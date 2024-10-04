@@ -17,13 +17,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
-public class CorporateClientCrudServiceImpl implements CorporateClientCrudService{
+public class CorporateClientCrudServiceImpl implements CorporateClientCrudService {
     private final CorporateClientRepository corporateClientRepository;
     private final ClientRepository clientRepository;
 
@@ -45,13 +47,14 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
         this.messageService = messageService;
     }
 
+    @Async
     @Override
-    public CorporateClientCrudResponseDto create(CorporateClientCrudRequestDto request) {
+    public CompletableFuture<CorporateClientCrudResponseDto> create(CorporateClientCrudRequestDto request) {
         try {
-            log.debug("Creating {}", entityName);
+            log.debug("Creating {} asynchronously", entityName);
             CorporateClient corporateClient = toEntity(request);
             corporateClient = corporateClientRepository.save(corporateClient);
-            return toResponseDto(corporateClient);
+            return CompletableFuture.completedFuture(toResponseDto(corporateClient));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -59,25 +62,28 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
         }
     }
 
+    @Async
     @Override
-    public PaginatedResponse<CorporateClientCrudResponseDto> getAll(int offset, int limit) {
+    public CompletableFuture<PaginatedResponse<CorporateClientCrudResponseDto>> getAll(int offset, int limit) {
         try {
-            log.debug("Retrieving all {}s", entityName);
-            Page<CorporateClient> corporateClient = corporateClientRepository.findAll(PageRequest.of(offset, limit));
-            List<CorporateClientCrudResponseDto> individualClientCrudResponseDtos = corporateClient.map(this::toResponseDto).toList();
-            return new PaginatedResponse<>(corporateClient.getTotalElements(), corporateClient.getTotalPages(), individualClientCrudResponseDtos);
+            log.debug("Retrieving all {}s asynchronously", entityName);
+            Page<CorporateClient> corporateClientPage = corporateClientRepository.findAll(PageRequest.of(offset, limit));
+            List<CorporateClientCrudResponseDto> corporateClientCrudResponseDtos = corporateClientPage.map(this::toResponseDto).toList();
+            PaginatedResponse<CorporateClientCrudResponseDto> response = new PaginatedResponse<>(corporateClientPage.getTotalElements(), corporateClientPage.getTotalPages(), corporateClientCrudResponseDtos);
+            return CompletableFuture.completedFuture(response);
         } catch (Exception e) {
             throw handleUnexpectedException("retrieving", e);
         }
     }
 
+    @Async
     @Override
-    public CorporateClientCrudResponseDto get(Long id) {
+    public CompletableFuture<CorporateClientCrudResponseDto> get(Long id) {
         try {
-            log.debug("Retrieving {} with ID: {}", entityName, id);
+            log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
             CorporateClient corporateClient = corporateClientRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateClient.service.invalid.corporateClient", new Object[]{id})));
-            return toResponseDto(corporateClient);
+            return CompletableFuture.completedFuture(toResponseDto(corporateClient));
         } catch (EntityNotFoundException e) {
             log.error("Error retrieving {}: {}", entityName, e.getMessage());
             throw e;
@@ -86,16 +92,17 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
         }
     }
 
+    @Async
     @Override
-    public CorporateClientCrudResponseDto update(CorporateClientCrudUpdateRequestDto request) {
+    public CompletableFuture<CorporateClientCrudResponseDto> update(CorporateClientCrudUpdateRequestDto request) {
         try {
-            log.debug("Updating {} with id {}", entityName, request.getId());
-            CorporateClient corporateClient = corporateClientRepository.findById(request.getId()).
-                    orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateClient.service.invalid.corporateClient", new Object[]{request.getId()})));
+            log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+            CorporateClient corporateClient = corporateClientRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateClient.service.invalid.corporateClient", new Object[]{request.getId()})));
             CorporateClient updateCorporateClient = toEntity(request);
             updateCorporateClient.setId(corporateClient.getId());
             updateCorporateClient = corporateClientRepository.save(updateCorporateClient);
-            return toResponseDto(updateCorporateClient);
+            return CompletableFuture.completedFuture(toResponseDto(updateCorporateClient));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -103,13 +110,15 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
         }
     }
 
+    @Async
     @Override
-    public void delete(Long id) {
+    public CompletableFuture<Void> delete(Long id) {
         try {
-            log.debug("Deleting {} with ID: {}", entityName, id);
+            log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
             CorporateClient corporateClient = corporateClientRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("corporateClient.service.invalid.corporateClient", new Object[]{id})));
             corporateClientRepository.delete(corporateClient);
+            return CompletableFuture.completedFuture(null);
         } catch (EntityNotFoundException e) {
             log.error("Error deleting {}: {}", entityName, e.getMessage());
             throw e;
@@ -119,6 +128,28 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
     }
 
     private CorporateClient toEntity(CorporateClientCrudRequestDto request) {
+        log.debug("Mapping {} to {} entity", requestDto, entityName);
+
+        Client client = clientValidationService.validateClientExists(request.getId_client());
+        IndividualClient legalRepresentative = individualClientValidationService.validateIndividualClientExists(request.getId_legal_representative());
+
+        return CorporateClient.builder()
+                .id_client(client)
+                .id_legal_representative(legalRepresentative)
+                .subtype(request.getSubtype())
+                .name(request.getName())
+                .email(request.getEmail())
+                .phoneOne(request.getPhoneOne())
+                .phoneTwo(request.getPhoneTwo())
+                .rfc(request.getRfc())
+                .serialNumber(request.getSerialNumber())
+                .businessActivity(request.getBusinessActivity())
+                .incorporationDate(request.getIncorporationDate())
+                .numberOfEmployees(request.getNumberOfEmployees())
+                .build();
+    }
+
+    private CorporateClient toEntity(CorporateClientCrudUpdateRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
 
         Client client = clientValidationService.validateClientExists(request.getId_client());
