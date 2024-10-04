@@ -14,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -39,13 +41,14 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
         this.messageService = messageService;
     }
 
+    @Async
     @Override
-    public BoardOfDirectorCrudResponseDto create(BoardOfDirectorCrudRequestDto request) {
+    public CompletableFuture<BoardOfDirectorCrudResponseDto> create(BoardOfDirectorCrudRequestDto request) {
         try {
-            log.debug("Creating {}", entityName);
+            log.debug("Creating {} asynchronously", entityName);
             BoardOfDirector boardOfDirector = toEntity(request);
             boardOfDirector = boardOfDirectorRepository.save(boardOfDirector);
-            return toResponseDto(boardOfDirector);
+            return CompletableFuture.completedFuture(toResponseDto(boardOfDirector));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -53,25 +56,28 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
         }
     }
 
+    @Async
     @Override
-    public PaginatedResponse<BoardOfDirectorCrudResponseDto> getAll(int offset, int limit) {
+    public CompletableFuture<PaginatedResponse<BoardOfDirectorCrudResponseDto>> getAll(int offset, int limit) {
         try {
-            log.debug("Retrieving all {}s", entityName);
-            Page<BoardOfDirector> boardOfDirector = boardOfDirectorRepository.findAll(PageRequest.of(offset, limit));
-            List<BoardOfDirectorCrudResponseDto> boardOfDirectorCrudResponseDtos = boardOfDirector.map(this::toResponseDto).toList();
-            return new PaginatedResponse<>(boardOfDirector.getTotalElements(), boardOfDirector.getTotalPages(), boardOfDirectorCrudResponseDtos);
+            log.debug("Retrieving all {}s asynchronously", entityName);
+            Page<BoardOfDirector> boardOfDirectorPage = boardOfDirectorRepository.findAll(PageRequest.of(offset, limit));
+            List<BoardOfDirectorCrudResponseDto> boardOfDirectorCrudResponseDtos = boardOfDirectorPage.map(this::toResponseDto).toList();
+            PaginatedResponse<BoardOfDirectorCrudResponseDto> response = new PaginatedResponse<>(boardOfDirectorPage.getTotalElements(), boardOfDirectorPage.getTotalPages(), boardOfDirectorCrudResponseDtos);
+            return CompletableFuture.completedFuture(response);
         } catch (Exception e) {
             throw handleUnexpectedException("retrieving", e);
         }
     }
 
+    @Async
     @Override
-    public BoardOfDirectorCrudResponseDto get(Long id) {
+    public CompletableFuture<BoardOfDirectorCrudResponseDto> get(Long id) {
         try {
-            log.debug("Retrieving {} with ID: {}", entityName, id);
+            log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
             BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{id})));
-            return toResponseDto(boardOfDirector);
+            return CompletableFuture.completedFuture(toResponseDto(boardOfDirector));
         } catch (EntityNotFoundException e) {
             log.error("Error retrieving {}: {}", entityName, e.getMessage());
             throw e;
@@ -80,16 +86,17 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
         }
     }
 
+    @Async
     @Override
-    public BoardOfDirectorCrudResponseDto update(BoardOfDirectorCrudUpdateRequestDto request) {
+    public CompletableFuture<BoardOfDirectorCrudResponseDto> update(BoardOfDirectorCrudUpdateRequestDto request) {
         try {
-            log.debug("Updating {} with id {}", entityName, request.getId());
-            BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(request.getId()).
-                    orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{request.getId()})));
+            log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
+            BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{request.getId()})));
             BoardOfDirector updateBoardOfDirector = toEntity(request);
             updateBoardOfDirector.setId(boardOfDirector.getId());
             updateBoardOfDirector = boardOfDirectorRepository.save(updateBoardOfDirector);
-            return toResponseDto(updateBoardOfDirector);
+            return CompletableFuture.completedFuture(toResponseDto(updateBoardOfDirector));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -97,13 +104,15 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
         }
     }
 
+    @Async
     @Override
-    public void delete(Long id) {
+    public CompletableFuture<Void> delete(Long id) {
         try {
-            log.debug("Deleting {} with ID: {}", entityName, id);
+            log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
             BoardOfDirector boardOfDirector = boardOfDirectorRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("boardOfDirector.service.invalid.boardOfDirector", new Object[]{id})));
             boardOfDirectorRepository.delete(boardOfDirector);
+            return CompletableFuture.completedFuture(null);
         } catch (EntityNotFoundException e) {
             log.error("Error deleting {}: {}", entityName, e.getMessage());
             throw e;
@@ -113,7 +122,7 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
     }
 
     private BoardOfDirector toEntity(BoardOfDirectorCrudRequestDto request) {
-        log.debug("Mapping {} to {} entity", requestDto, entityName);
+        log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
         CorporateClient corporateClient = corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client());
 
         return BoardOfDirector.builder()
@@ -124,7 +133,7 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
     }
 
     private BoardOfDirectorCrudResponseDto toResponseDto(BoardOfDirector boardOfDirector) {
-        log.debug("Mapping {} entity to {}", entityName, responseDto);
+        log.debug("Mapping {} entity to {} asynchronously", entityName, responseDto);
 
         return BoardOfDirectorCrudResponseDto.builder()
                 .id(boardOfDirector.getId())
