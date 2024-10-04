@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import java.util.concurrent.CompletableFuture;
 
 @RequestMapping(ApiVersion.V3 + "/corporate_clients")
 @RestController
@@ -25,48 +26,82 @@ public class CorporateClientController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>> create(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>>> create(
             @Validated @RequestBody CorporateClientCrudRequestDto request
     ) {
-        CorporateClientCrudResponseDto corporateClient = corporateClientCrudService.create(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiCustomResponse<>(HttpStatus.CREATED.getReasonPhrase(), HttpStatus.CREATED.value(), messageService.getMessage("corporateClient.controller.create.successfully"), corporateClient));
+        return corporateClientCrudService.create(request).thenApply(corporateClient ->
+                ResponseEntity.status(HttpStatus.CREATED).body(
+                        new ApiCustomResponse<>(
+                                HttpStatus.CREATED.getReasonPhrase(),
+                                HttpStatus.CREATED.value(),
+                                messageService.getMessage("corporateClient.controller.create.successfully"),
+                                corporateClient
+                        )
+                )
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>> get(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>>> get(
             @PathVariable Long id
     ) {
-        CorporateClientCrudResponseDto corporateClient = corporateClientCrudService.get(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("corporateClient.controller.get.successfully"), corporateClient));
+        return corporateClientCrudService.get(id).thenApply(corporateClient ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateClient.controller.get.successfully"),
+                                corporateClient
+                        )
+                )
+        );
     }
 
     @GetMapping
-    public ResponseEntity<ApiCustomResponse<PaginatedResponse<CorporateClientCrudResponseDto>>> getAll(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<CorporateClientCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PaginatedResponse<CorporateClientCrudResponseDto> corporateClient = corporateClientCrudService.getAll(offset, limit);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("corporateClient.controller.getAll.successfully"), corporateClient));
+        return corporateClientCrudService.getAll(offset, limit).thenApply(corporateClients ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateClient.controller.getAll.successfully"),
+                                corporateClients
+                        )
+                )
+        );
     }
 
     @PutMapping
-    public ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>> update(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>>> update(
             @Validated @RequestBody CorporateClientCrudUpdateRequestDto request
     ) {
-        CorporateClientCrudResponseDto corporateClient = corporateClientCrudService.update(request);
-        ApiCustomResponse<CorporateClientCrudResponseDto> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("corporateClient.controller.update.successfully"), corporateClient);
-        return ResponseEntity.ok(response);
+        return corporateClientCrudService.update(request).thenApply(corporateClient ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                "Success",
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateClient.controller.update.successfully"),
+                                corporateClient
+                        )
+                )
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<Void>> delete(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
     ) {
-        corporateClientCrudService.delete(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("guarantee.controller.delete.successfully")));
+        return corporateClientCrudService.delete(id).thenApply(voidResult ->
+                ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("corporateClient.controller.delete.successfully")
+                        )
+                )
+        );
     }
 }
