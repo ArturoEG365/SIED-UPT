@@ -4,15 +4,16 @@ import com.sied.clients.base.responses.PaginatedResponse;
 import com.sied.clients.dto.controllingEntity.request.ControllingEntityCrudRequestDto;
 import com.sied.clients.dto.controllingEntity.request.ControllingEntityCrudUpdateRequestDto;
 import com.sied.clients.dto.controllingEntity.response.ControllingEntityCrudResponseDto;
+import java.util.concurrent.CompletableFuture;
 
 public interface ControllingEntityCrudService {
-    ControllingEntityCrudResponseDto create(ControllingEntityCrudRequestDto request);
+    CompletableFuture<ControllingEntityCrudResponseDto> create(ControllingEntityCrudRequestDto request);
 
-    PaginatedResponse<ControllingEntityCrudResponseDto> getAll(int offset, int limit);
+    CompletableFuture<PaginatedResponse<ControllingEntityCrudResponseDto>> getAll(int offset, int limit);
 
-    ControllingEntityCrudResponseDto get(Long id);
+    CompletableFuture<ControllingEntityCrudResponseDto> get(Long id);
 
-    ControllingEntityCrudResponseDto update(ControllingEntityCrudUpdateRequestDto request);
+    CompletableFuture<ControllingEntityCrudResponseDto> update(ControllingEntityCrudUpdateRequestDto request);
 
-    void delete(Long id);
+    CompletableFuture<Void> delete(Long id);
 }
