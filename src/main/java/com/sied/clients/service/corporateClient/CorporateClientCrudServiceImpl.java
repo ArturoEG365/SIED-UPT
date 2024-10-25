@@ -50,17 +50,20 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
     @Async
     @Override
     public CompletableFuture<CorporateClientCrudResponseDto> create(CorporateClientCrudRequestDto request) {
-        try {
-            log.debug("Creating {} asynchronously", entityName);
-            CorporateClient corporateClient = toEntity(request);
-            corporateClient = corporateClientRepository.save(corporateClient);
-            return CompletableFuture.completedFuture(toResponseDto(corporateClient));
-        } catch (EntityNotFoundException e) {
-            throw e;
-        } catch (Exception e) {
-            throw handleUnexpectedException("creating", e);
-        }
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                log.debug("Creating {} asynchronously", entityName);
+                CorporateClient corporateClient = toEntity(request);
+                corporateClient = corporateClientRepository.save(corporateClient);
+                return toResponseDto(corporateClient);
+            } catch (EntityNotFoundException e) {
+                throw e;
+            } catch (Exception e) {
+                throw handleUnexpectedException("creating", e);
+            }
+        });
     }
+
 
     @Async
     @Override
@@ -130,8 +133,12 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
     private CorporateClient toEntity(CorporateClientCrudRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
 
-        Client client = clientValidationService.validateClientExists(request.getClient());
-        IndividualClient legalRepresentative = individualClientValidationService.validateIndividualClientExists(request.getLegalRepresentative());
+        CompletableFuture<Client> clientFuture = CompletableFuture.supplyAsync(() -> clientValidationService.validateClientExists(request.getClient()));
+        CompletableFuture<IndividualClient> representativeFuture = CompletableFuture.supplyAsync(() -> individualClientValidationService.validateIndividualClientExists(request.getLegalRepresentative()));
+
+        // Esperamos a que ambas validaciones terminen
+        Client client = clientFuture.join();
+        IndividualClient legalRepresentative = representativeFuture.join();
 
         return CorporateClient.builder()
                 .client(client)
@@ -148,6 +155,7 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
                 .numberOfEmployees(request.getNumberOfEmployees())
                 .build();
     }
+
 
     private CorporateClient toEntity(CorporateClientCrudUpdateRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
