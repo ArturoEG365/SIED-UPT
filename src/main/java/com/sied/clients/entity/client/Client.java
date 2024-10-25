@@ -20,16 +20,16 @@ public class Client {
 
     @ManyToOne
     @JoinColumn(name = "id_address")
-    private Address id_address;
+    private Address address;
 
     @Column(name = "id_user")
-    private Long id_user;
+    private Long user;
 
     @Column(name = "id_instance")
-    private Long id_instance;
+    private Long instance;
 
     @Column(name = "client_type")
-    private String client_type;
+    private String clientType;
 
     @Column(name = "status")
     private Boolean status;

@@ -20,7 +20,7 @@ public class ControllingEntity {
 
     @ManyToOne
     @JoinColumn(name = "id_corporate_client")
-    private CorporateClient id_corporate_client;
+    private CorporateClient corporateClient;
 
     @Column(name = "name")
     private String name;

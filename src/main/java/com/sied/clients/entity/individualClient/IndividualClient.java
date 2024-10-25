@@ -21,11 +21,11 @@ public class IndividualClient {
 
     @ManyToOne
     @JoinColumn(name = "id_client")
-    private Client id_client;
+    private Client client;
 
     @ManyToOne
     @JoinColumn(name = "id_person")
-    private Person id_person;
+    private Person person;
 
     @Column(name = "subtype")
     private String subtype;

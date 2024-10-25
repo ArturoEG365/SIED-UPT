@@ -136,18 +136,18 @@ public class ControllingEntityCrudServiceImpl implements ControllingEntityCrudSe
 
     private CompletableFuture<ControllingEntity> toEntity(ControllingEntityCrudRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> ControllingEntity.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .build());
     }
 
     private CompletableFuture<ControllingEntity> toEntity(ControllingEntityCrudUpdateRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> ControllingEntity.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .build());
     }
@@ -157,7 +157,7 @@ public class ControllingEntityCrudServiceImpl implements ControllingEntityCrudSe
 
         return ControllingEntityCrudResponseDto.builder()
                 .id(controllingEntity.getId())
-                .id_corporate_client(controllingEntity.getId_corporate_client())
+                .corporateClient(controllingEntity.getCorporateClient())
                 .name(controllingEntity.getName())
                 .status(controllingEntity.getStatus())
                 .createdAt(controllingEntity.getCreatedAt())

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class ReferenceCrudRequestDto {
     @NotNull(message = "{reference.dto.id_client.notNull}")
-    private Long id_client;
+    private Long client;
 
     @NotNull(message = "{reference.dto.referenceType}")
     private String referenceType;

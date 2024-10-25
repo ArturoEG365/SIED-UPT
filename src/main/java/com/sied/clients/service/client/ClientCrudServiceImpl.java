@@ -117,13 +117,13 @@ public class ClientCrudServiceImpl implements ClientCrudService{
     private Client toEntity(ClientCrudRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
 
-        Address address = addressValidationService.validateAddressExists(request.getId_address());
+        Address address = addressValidationService.validateAddressExists(request.getAddress());
 
         return Client.builder()
-                .id_address(address)
-                .id_user(request.getId_user())
-                .id_instance(request.getId_instance())
-                .client_type(request.getClient_type())
+                .address(address)
+                .user(request.getUser())
+                .instance(request.getInstance())
+                .clientType(request.getClientType())
                 .build();
     }
 
@@ -132,10 +132,10 @@ public class ClientCrudServiceImpl implements ClientCrudService{
 
         return ClientCrudResponseDto.builder()
                 .id(client.getId())
-                .id_address(client.getId_address())
-                .id_user(client.getId_user())
-                .id_instance(client.getId_instance())
-                .client_type(client.getClient_type())
+                .address(client.getAddress())
+                .user(client.getUser())
+                .instance(client.getInstance())
+                .clientType(client.getClientType())
                 .status(client.getStatus())
                 .createdAt(client.getCreatedAt())
                 .updatedAt(client.getUpdatedAt())

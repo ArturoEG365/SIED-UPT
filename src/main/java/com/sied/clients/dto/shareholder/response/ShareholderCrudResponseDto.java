@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class ShareholderCrudResponseDto {
     private Long id;
-    private CorporateClient id_corporate_client;
+    private CorporateClient corporateClient;
     private String name;
     private Double ownershipPercentage;
     private Boolean status;

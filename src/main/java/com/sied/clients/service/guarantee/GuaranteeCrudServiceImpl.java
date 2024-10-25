@@ -120,10 +120,10 @@ public class GuaranteeCrudServiceImpl implements GuaranteeCrudService {
 
     private Guarantee toEntity(GuaranteeCrudRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
-        Client client = clientValidationService.validateClientExists(request.getId_client());
+        Client client = clientValidationService.validateClientExists(request.getClient());
 
         return Guarantee.builder()
-                .id_client(client)
+                .client(client)
                 .name(request.getName())
                 .build();
     }
@@ -133,7 +133,7 @@ public class GuaranteeCrudServiceImpl implements GuaranteeCrudService {
 
         return GuaranteeCrudResponseDto.builder()
                 .id(guarantee.getId())
-                .id_client(guarantee.getId_client())
+                .client(guarantee.getClient())
                 .name(guarantee.getName())
                 .status(guarantee.getStatus())
                 .createdAt(guarantee.getCreatedAt())

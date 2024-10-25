@@ -135,9 +135,9 @@ public class CorporateStructureCrudServiceImpl implements CorporateStructureCrud
 
     private CompletableFuture<CorporateStructure> toEntity(CorporateStructureCrudRequestDto request) {
         log.debug("Mapping {} to entity asynchronously", requestDto);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> CorporateStructure.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .position(request.getPosition())
                         .build());
@@ -145,9 +145,9 @@ public class CorporateStructureCrudServiceImpl implements CorporateStructureCrud
 
     private CompletableFuture<CorporateStructure> toEntity(CorporateStructureCrudUpdateRequestDto request) {
         log.debug("Mapping {} to entity asynchronously", requestDto);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> CorporateStructure.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .position(request.getPosition())
                         .build());
@@ -157,7 +157,7 @@ public class CorporateStructureCrudServiceImpl implements CorporateStructureCrud
         log.debug("Mapping {} entity to {}", entityName, responseDto);
         return CorporateStructureCrudResponseDto.builder()
                 .id(corporateStructure.getId())
-                .id_corporate_client(corporateStructure.getId_corporate_client())
+                .corporateClient(corporateStructure.getCorporateClient())
                 .name(corporateStructure.getName())
                 .position(corporateStructure.getPosition())
                 .status(corporateStructure.getStatus())

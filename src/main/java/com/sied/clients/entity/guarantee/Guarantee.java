@@ -20,7 +20,7 @@ public class Guarantee {
 
     @ManyToOne
     @JoinColumn(name = "id_client")
-    private Client id_client;
+    private Client client;
 
     @Column(name = "name")
     private String name;

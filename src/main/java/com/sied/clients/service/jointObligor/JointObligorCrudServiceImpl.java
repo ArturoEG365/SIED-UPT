@@ -139,10 +139,10 @@ public class JointObligorCrudServiceImpl implements JointObligorCrudService {
         Address address = addressValidationService.validateAddressExists(request.getId_address());
 
         return JointObligor.builder()
-                .id_client(client)
-                .id_person(person)
-                .id_address(address)
-                .id_user(request.getId_user())
+                .client(client)
+                .person(person)
+                .address(address)
+                .user(request.getId_user())
                 .build();
     }
 
@@ -151,10 +151,10 @@ public class JointObligorCrudServiceImpl implements JointObligorCrudService {
 
         return JointObligorCrudResponseDto.builder()
                 .id(jointObligor.getId())
-                .id_client(jointObligor.getId_client())
-                .id_person(jointObligor.getId_person())
-                .id_address(jointObligor.getId_address())
-                .id_user(jointObligor.getId_user())
+                .id_client(jointObligor.getClient())
+                .id_person(jointObligor.getPerson())
+                .id_address(jointObligor.getAddress())
+                .id_user(jointObligor.getUser())
                 .status(jointObligor.getStatus())
                 .build();
     }

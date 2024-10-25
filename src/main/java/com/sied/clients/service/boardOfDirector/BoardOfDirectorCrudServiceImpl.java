@@ -136,9 +136,9 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
 
     private CompletableFuture<BoardOfDirector> toEntity(BoardOfDirectorCrudRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> BoardOfDirector.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .position(request.getPosition())
                         .build());
@@ -146,9 +146,9 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
 
     private CompletableFuture<BoardOfDirector> toEntity(BoardOfDirectorCrudUpdateRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> BoardOfDirector.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .position(request.getPosition())
                         .build());
@@ -159,7 +159,7 @@ public class BoardOfDirectorCrudServiceImpl implements BoardOfDirectorCrudServic
 
         return BoardOfDirectorCrudResponseDto.builder()
                 .id(boardOfDirector.getId())
-                .id_corporate_client(boardOfDirector.getId_corporate_client())
+                .corporateClient(boardOfDirector.getCorporateClient())
                 .name(boardOfDirector.getName())
                 .position(boardOfDirector.getPosition())
                 .status(boardOfDirector.getStatus())

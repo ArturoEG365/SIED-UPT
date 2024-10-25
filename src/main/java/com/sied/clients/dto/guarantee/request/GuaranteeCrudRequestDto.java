@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class GuaranteeCrudRequestDto {
     @NotNull(message = "{guarantee.dto.id_client.notNull}")
-    private Long id_client;
+    private Long client;
 
     @Size(min = 1, max = 256, message = "{guarantee.dto.name.size}")
     @NotBlank(message = "{guarantee.dto.name.notBlank}")

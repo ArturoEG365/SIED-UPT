@@ -20,7 +20,7 @@ public class Reference {
 
     @ManyToOne
     @JoinColumn(name = "id_client")
-    private Client id_client;
+    private Client client;
 
     @Column(name = "reference_type")
     private String referenceType;

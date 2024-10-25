@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class ReferenceCrudResponseDto {
     private Long id;
-    private Client id_client;
+    private Client client;
     private String referenceType;
     private String name;
     private String relationship;

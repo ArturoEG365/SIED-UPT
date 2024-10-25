@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class GuaranteeCrudResponseDto {
     private Long id;
-    private Client id_client;
+    private Client client;
     private String name;
     private Boolean status;
     private LocalDateTime createdAt;

@@ -21,11 +21,11 @@ public class CorporateClient {
 
     @ManyToOne
     @JoinColumn(name = "id_client")
-    private Client id_client;
+    private Client client;
 
     @ManyToOne
     @JoinColumn(name = "id_legal_representative")
-    private IndividualClient id_legal_representative;
+    private IndividualClient legalRepresentative;
 
     @Column(name = "subtype")
     private String subtype;

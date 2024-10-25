@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 
 public class ClientCrudResponseDto {
     private Long id;
-    private Address id_address;
-    private Long id_user;
-    private Long id_instance;
-    private String client_type;
+    private Address address;
+    private Long user;
+    private Long instance;
+    private String clientType;
     private Boolean status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -9,10 +9,10 @@ import lombok.Data;
 @Data
 public class CorporateClientCrudRequestDto {
     @NotNull(message = "{corporateClient.dto.id_client.notNull}")
-    private Long id_client;
+    private Long client;
 
     @NotNull(message = "{corporateClient.dto.id_legal_representative.notNull}")
-    private Long id_legal_representative;
+    private Long legalRepresentative;
 
     @Size(min = 1, max = 256, message = "{corporateClient.dto.subtype.size}")
     @NotBlank(message = "{corporateClient.dto.subtype.notBlank}")

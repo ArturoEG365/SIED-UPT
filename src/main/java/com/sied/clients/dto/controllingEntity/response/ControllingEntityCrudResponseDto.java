@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class ControllingEntityCrudResponseDto {
     private Long id;
-    private CorporateClient id_corporate_client;
+    private CorporateClient corporateClient;
     private String name;
     private Boolean status;
     private LocalDateTime createdAt;

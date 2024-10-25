@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class ShareholderCrudRequestDto {
     @NotNull(message = "{shareholder.dto.id_corporate_client.notNull}")
-    private Long id_corporate_client;
+    private Long corporateClient;
 
     @NotNull(message = "{shareholder.dto.ownershipPercentage.notNull}")
     @DecimalMin(value = "0.0", inclusive = true, message = "{shareholder.dto.ownershipPercentage.min}")

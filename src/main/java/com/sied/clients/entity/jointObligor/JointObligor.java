@@ -22,18 +22,18 @@ public class JointObligor {
 
     @ManyToOne
     @JoinColumn(name = "id_client")
-    private Client id_client;
+    private Client client;
 
     @ManyToOne
     @JoinColumn(name = "id_person")
-    private Person id_person;
+    private Person person;
 
     @ManyToOne
     @JoinColumn(name = "id_address")
-    private Address id_address;
+    private Address address;
 
     @Column(name = "id_user")
-    private Long id_user;
+    private Long user;
 
     @Column(name = "status")
     private Boolean status;

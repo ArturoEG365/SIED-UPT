@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 public class CorporateStructureCrudResponseDto {
     private Long id;
-    private CorporateClient id_corporate_client;
+    private CorporateClient corporateClient;
     private String name;
     private String position;
     private Boolean status;

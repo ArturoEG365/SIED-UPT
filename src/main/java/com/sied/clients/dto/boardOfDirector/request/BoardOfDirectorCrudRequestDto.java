@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class BoardOfDirectorCrudRequestDto {
     @NotNull(message = "{boardOfDirector.dto.id_corporate_client.notNull}")
-    private Long id_corporate_client;
+    private Long corporateClient;
 
     @Size(min = 1, max = 256, message = "{boardOfDirector.dto.name.size}")
     @NotBlank(message = "{boardOfDirector.dto.name.notBlank}")

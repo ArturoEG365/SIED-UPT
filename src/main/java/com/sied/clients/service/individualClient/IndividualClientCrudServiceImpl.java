@@ -131,8 +131,8 @@ public class IndividualClientCrudServiceImpl implements IndividualClientCrudServ
         Person person = personValidationService.validatePersonExists(request.getId_person());
 
         return IndividualClient.builder()
-                .id_client(client)
-                .id_person(person)
+                .client(client)
+                .person(person)
                 .subtype(request.getSubtype())
                 .ocupation(request.getOcupation())
                 .maritalStatus(request.getMaritalStatus())
@@ -144,8 +144,8 @@ public class IndividualClientCrudServiceImpl implements IndividualClientCrudServ
 
         return IndividualClientCrudResponseDto.builder()
                 .id(individualClient.getId())
-                .id_client(individualClient.getId_client())
-                .id_person(individualClient.getId_person())
+                .id_client(individualClient.getClient())
+                .id_person(individualClient.getPerson())
                 .subtype(individualClient.getSubtype())
                 .ocupation(individualClient.getOcupation())
                 .maritalStatus(individualClient.getMaritalStatus())

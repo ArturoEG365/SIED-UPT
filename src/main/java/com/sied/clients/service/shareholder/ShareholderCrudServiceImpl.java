@@ -136,9 +136,9 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
 
     private CompletableFuture<Shareholder> toEntity(ShareholderCrudRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> Shareholder.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .ownershipPercentage(request.getOwnershipPercentage())
                         .build());
@@ -146,9 +146,9 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
 
     private CompletableFuture<Shareholder> toEntity(ShareholderCrudUpdateRequestDto request) {
         log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getId_corporate_client())
+        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
                 .thenApply(corporateClient -> Shareholder.builder()
-                        .id_corporate_client(corporateClient)
+                        .corporateClient(corporateClient)
                         .name(request.getName())
                         .ownershipPercentage(request.getOwnershipPercentage())
                         .build());
@@ -159,7 +159,7 @@ public class ShareholderCrudServiceImpl implements ShareholderCrudService {
 
         return ShareholderCrudResponseDto.builder()
                 .id(shareholder.getId())
-                .id_corporate_client(shareholder.getId_corporate_client())
+                .corporateClient(shareholder.getCorporateClient())
                 .name(shareholder.getName())
                 .ownershipPercentage(shareholder.getOwnershipPercentage())
                 .status(shareholder.getStatus())

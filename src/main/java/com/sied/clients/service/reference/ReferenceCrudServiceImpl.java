@@ -120,10 +120,10 @@ public class ReferenceCrudServiceImpl implements ReferenceCrudService {
 
     private Reference toEntity(ReferenceCrudRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
-        Client client = clientValidationService.validateClientExists(request.getId_client());
+        Client client = clientValidationService.validateClientExists(request.getClient());
 
         return Reference.builder()
-                .id_client(client)
+                .client(client)
                 .referenceType(request.getReferenceType())
                 .name(request.getName())
                 .relationship(request.getRelationship())
@@ -138,7 +138,7 @@ public class ReferenceCrudServiceImpl implements ReferenceCrudService {
         log.debug("Mapping {} entity to {} DTO", entityName, responseDto);
         return ReferenceCrudResponseDto.builder()
                 .id(reference.getId())
-                .id_client(reference.getId_client())
+                .client(reference.getClient())
                 .referenceType(reference.getReferenceType())
                 .name(reference.getName())
                 .relationship(reference.getRelationship())

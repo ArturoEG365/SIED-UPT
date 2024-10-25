@@ -130,12 +130,12 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
     private CorporateClient toEntity(CorporateClientCrudRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
 
-        Client client = clientValidationService.validateClientExists(request.getId_client());
-        IndividualClient legalRepresentative = individualClientValidationService.validateIndividualClientExists(request.getId_legal_representative());
+        Client client = clientValidationService.validateClientExists(request.getClient());
+        IndividualClient legalRepresentative = individualClientValidationService.validateIndividualClientExists(request.getLegalRepresentative());
 
         return CorporateClient.builder()
-                .id_client(client)
-                .id_legal_representative(legalRepresentative)
+                .client(client)
+                .legalRepresentative(legalRepresentative)
                 .subtype(request.getSubtype())
                 .name(request.getName())
                 .email(request.getEmail())
@@ -152,12 +152,12 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
     private CorporateClient toEntity(CorporateClientCrudUpdateRequestDto request) {
         log.debug("Mapping {} to {} entity", requestDto, entityName);
 
-        Client client = clientValidationService.validateClientExists(request.getId_client());
-        IndividualClient legalRepresentative = individualClientValidationService.validateIndividualClientExists(request.getId_legal_representative());
+        Client client = clientValidationService.validateClientExists(request.getClient());
+        IndividualClient legalRepresentative = individualClientValidationService.validateIndividualClientExists(request.getLegalRepresentative());
 
         return CorporateClient.builder()
-                .id_client(client)
-                .id_legal_representative(legalRepresentative)
+                .client(client)
+                .legalRepresentative(legalRepresentative)
                 .subtype(request.getSubtype())
                 .name(request.getName())
                 .email(request.getEmail())
@@ -176,8 +176,8 @@ public class CorporateClientCrudServiceImpl implements CorporateClientCrudServic
 
         return CorporateClientCrudResponseDto.builder()
                 .id(corporateClient.getId())
-                .id_client(corporateClient.getId_client())
-                .id_legal_representative(corporateClient.getId_legal_representative())
+                .client(corporateClient.getClient())
+                .legalRepresentative(corporateClient.getLegalRepresentative())
                 .subtype(corporateClient.getSubtype())
                 .name(corporateClient.getName())
                 .email(corporateClient.getEmail())

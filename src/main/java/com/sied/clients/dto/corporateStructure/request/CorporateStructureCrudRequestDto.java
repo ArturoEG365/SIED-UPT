@@ -8,7 +8,7 @@ import lombok.Data;
 @Data
 public class CorporateStructureCrudRequestDto {
     @NotNull(message = "{corporateStructure.dto.id_corporate_client.notNull}")
-    private Long id_corporate_client;
+    private Long corporateClient;
 
     @NotBlank(message = "{corporateStructure.dto.name.NotBlank}")
     @Size(min = 1, max = 100, message = "{corporateStructure.dto.name.size}")

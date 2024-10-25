@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CorporateClientCrudResponseDto {
     private Long id;
-    private Client id_client;
-    private IndividualClient id_legal_representative;
+    private Client client;
+    private IndividualClient legalRepresentative;
     private String subtype;
     private String name;
     private String email;
