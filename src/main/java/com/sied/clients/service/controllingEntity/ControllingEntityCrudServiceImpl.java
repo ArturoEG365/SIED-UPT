@@ -23,150 +23,145 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @Slf4j
 public class ControllingEntityCrudServiceImpl implements ControllingEntityCrudService {
-    private final ControllingEntityRepository controllingEntityRepository;
+    private final ControllingEntityRepository repository;
+    private final CorporateClientValidationService clientValidationService;
+    private final MessageSource messageSource;
+    private final MessageService messageService;
 
-    private final String entityName = ControllingEntity.class.getSimpleName();
-    private final String responseDto = ControllingEntityCrudResponseDto.class.getSimpleName();
-    private final String requestDto = ControllingEntityCrudRequestDto.class.getSimpleName();
+    private static final String ENTITY_NAME = ControllingEntity.class.getSimpleName();
+    private static final String RESPONSE_DTO_NAME = ControllingEntityCrudResponseDto.class.getSimpleName();
+    private static final String REQUEST_DTO_NAME = ControllingEntityCrudRequestDto.class.getSimpleName();
 
-    private final CorporateClientValidationService corporateClientValidationService;
-
-    public final MessageSource messageSource;
-    public final MessageService messageService;
-
-    public ControllingEntityCrudServiceImpl(ControllingEntityRepository controllingEntityRepository, CorporateClientValidationService corporateClientValidationService, MessageSource messageSource, MessageService messageService) {
-        this.controllingEntityRepository = controllingEntityRepository;
-        this.corporateClientValidationService = corporateClientValidationService;
+    public ControllingEntityCrudServiceImpl(
+            ControllingEntityRepository repository,
+            CorporateClientValidationService clientValidationService,
+            MessageSource messageSource,
+            MessageService messageService) {
+        this.repository = repository;
+        this.clientValidationService = clientValidationService;
         this.messageSource = messageSource;
         this.messageService = messageService;
     }
 
     @Async
     @Override
-    public CompletableFuture<ControllingEntityCrudResponseDto> create(ControllingEntityCrudRequestDto request) {
-        log.debug("Creating {} asynchronously", entityName);
+    public CompletableFuture<ControllingEntityCrudResponseDto> createAsync(ControllingEntityCrudRequestDto request) {
+        log.debug("Initiating asynchronous creation of {}", ENTITY_NAME);
         return toEntity(request)
-                .thenCompose(controllingEntity -> CompletableFuture.supplyAsync(() -> {
-                    ControllingEntity savedEntity = controllingEntityRepository.save(controllingEntity);
-                    return toResponseDto(savedEntity);
-                }))
-                .exceptionally(ex -> {
-                    Throwable cause = ex.getCause();
-                    if (cause instanceof EntityNotFoundException) {
-                        throw (EntityNotFoundException) cause;
-                    } else {
-                        throw handleUnexpectedException("creating", (Exception) cause);
-                    }
-                });
+                .thenCompose(entity -> CompletableFuture.supplyAsync(() -> repository.save(entity)))
+                .thenApply(this::toResponseDto)
+                .exceptionally(this::handleExceptionDuringCreation);
     }
 
     @Async
     @Override
-    public CompletableFuture<PaginatedResponse<ControllingEntityCrudResponseDto>> getAll(int offset, int limit) {
-        try {
-            log.debug("Retrieving all {}s asynchronously", entityName);
-            Page<ControllingEntity> controllingEntityPage = controllingEntityRepository.findAll(PageRequest.of(offset, limit));
-            List<ControllingEntityCrudResponseDto> responseDtos = controllingEntityPage.map(this::toResponseDto).toList();
-            PaginatedResponse<ControllingEntityCrudResponseDto> response = new PaginatedResponse<>(controllingEntityPage.getTotalElements(), controllingEntityPage.getTotalPages(), responseDtos);
-            return CompletableFuture.completedFuture(response);
-        } catch (Exception e) {
-            throw handleUnexpectedException("retrieving", e);
-        }
+    public CompletableFuture<PaginatedResponse<ControllingEntityCrudResponseDto>> fetchAll(int offset, int limit) {
+        log.debug("Retrieving all entities for {} with pagination asynchronously", ENTITY_NAME);
+        return CompletableFuture.supplyAsync(() -> {
+            Page<ControllingEntity> page = repository.findAll(PageRequest.of(offset, limit));
+            List<ControllingEntityCrudResponseDto> dtoList = page.map(this::toResponseDto).toList();
+            return new PaginatedResponse<>(page.getTotalElements(), page.getTotalPages(), dtoList);
+        }).exceptionally(e -> {
+            throw handleUnexpectedException("retrieving", (Exception) e);
+        });
     }
 
     @Async
     @Override
     public CompletableFuture<ControllingEntityCrudResponseDto> get(Long id) {
-        return CompletableFuture.supplyAsync(() -> {
-            log.debug("Retrieving {} with ID: {} asynchronously", entityName, id);
-            ControllingEntity controllingEntity = controllingEntityRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("controllingEntity.service.invalid.controllingEntity", new Object[]{id})));
-            return toResponseDto(controllingEntity);
-        }).exceptionally(ex -> {
-            Throwable cause = ex.getCause();
-            if (cause instanceof EntityNotFoundException) {
-                throw (EntityNotFoundException) cause;
-            } else {
-                throw handleUnexpectedException("retrieving", (Exception) cause);
-            }
-        });
+        log.debug("Asynchronously retrieving {} by ID: {}", ENTITY_NAME, id);
+        return CompletableFuture.supplyAsync(() -> repository.findById(id)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                messageService.getMessage("controllingEntity.service.invalid.controllingEntity", new Object[]{id}))))
+                .thenApply(this::toResponseDto)
+                .exceptionally(this::handleExceptionDuringRetrieval);
     }
 
     @Async
     @Override
-    public CompletableFuture<ControllingEntityCrudResponseDto> update(ControllingEntityCrudUpdateRequestDto request) {
-        log.debug("Updating {} with id {} asynchronously", entityName, request.getId());
-        return CompletableFuture.supplyAsync(() -> {
-            ControllingEntity existingEntity = controllingEntityRepository.findById(request.getId())
-                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("controllingEntity.service.invalid.controllingEntity", new Object[]{request.getId()})));
-            return existingEntity;
-        }).thenCompose(existingEntity -> toEntity(request)
-                .thenCompose(updatedEntity -> CompletableFuture.supplyAsync(() -> {
-                    updatedEntity.setId(existingEntity.getId());
-                    ControllingEntity savedEntity = controllingEntityRepository.save(updatedEntity);
-                    return toResponseDto(savedEntity);
-                }))
-        ).exceptionally(ex -> {
-            Throwable cause = ex.getCause();
-            if (cause instanceof EntityNotFoundException) {
-                throw (EntityNotFoundException) cause;
-            } else {
-                throw handleUnexpectedException("updating", (Exception) cause);
-            }
-        });
+    public CompletableFuture<ControllingEntityCrudResponseDto> updateEntity(ControllingEntityCrudUpdateRequestDto request) {
+        log.debug("Asynchronously updating {} with ID: {}", ENTITY_NAME, request.getId());
+        return CompletableFuture.supplyAsync(() -> repository.findById(request.getId())
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                messageService.getMessage("controllingEntity.service.invalid.controllingEntity", new Object[]{request.getId()}))))
+                .thenCompose(existingEntity -> toEntity(request)
+                        .thenApply(updatedEntity -> {
+                            updatedEntity.setId(existingEntity.getId());
+                            return repository.save(updatedEntity);
+                        })
+                        .thenApply(this::toResponseDto))
+                .exceptionally(this::handleExceptionDuringUpdate);
     }
 
     @Async
     @Override
-    public CompletableFuture<Void> delete(Long id) {
+    public CompletableFuture<Void> removeById(Long id) {
+        log.debug("Asynchronously deleting {} with ID: {}", ENTITY_NAME, id);
         return CompletableFuture.runAsync(() -> {
-            log.debug("Deleting {} with ID: {} asynchronously", entityName, id);
-            ControllingEntity controllingEntity = controllingEntityRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("controllingEntity.service.invalid.controllingEntity", new Object[]{id})));
-            controllingEntityRepository.delete(controllingEntity);
-        }).exceptionally(ex -> {
-            Throwable cause = ex.getCause();
-            if (cause instanceof EntityNotFoundException) {
-                throw (EntityNotFoundException) cause;
-            } else {
-                throw handleUnexpectedException("deleting", (Exception) cause);
-            }
-        });
+            ControllingEntity entity = repository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            messageService.getMessage("controllingEntity.service.invalid.controllingEntity", new Object[]{id})));
+            repository.delete(entity);
+        }).exceptionally(this::handleExceptionDuringDeletion);
     }
 
     private CompletableFuture<ControllingEntity> toEntity(ControllingEntityCrudRequestDto request) {
-        log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
-                .thenApply(corporateClient -> ControllingEntity.builder()
-                        .corporateClient(corporateClient)
+        log.debug("Mapping {} to {} entity asynchronously", REQUEST_DTO_NAME, ENTITY_NAME);
+        return clientValidationService.validateCorporateClientExists(request.getCorporateClient())
+                .thenApply(client -> ControllingEntity.builder()
+                        .corporateClient(client)
                         .name(request.getName())
                         .build());
     }
 
     private CompletableFuture<ControllingEntity> toEntity(ControllingEntityCrudUpdateRequestDto request) {
-        log.debug("Mapping {} to {} entity asynchronously", requestDto, entityName);
-        return corporateClientValidationService.validateCorporateClientExists(request.getCorporateClient())
-                .thenApply(corporateClient -> ControllingEntity.builder()
-                        .corporateClient(corporateClient)
+        log.debug("Mapping {} to {} entity asynchronously", REQUEST_DTO_NAME, ENTITY_NAME);
+        return clientValidationService.validateCorporateClientExists(request.getCorporateClient())
+                .thenApply(client -> ControllingEntity.builder()
+                        .corporateClient(client)
                         .name(request.getName())
                         .build());
     }
 
-    private ControllingEntityCrudResponseDto toResponseDto(ControllingEntity controllingEntity) {
-        log.debug("Mapping {} entity to {}", entityName, responseDto);
-
+    private ControllingEntityCrudResponseDto toResponseDto(ControllingEntity entity) {
+        log.debug("Mapping {} entity to {}", ENTITY_NAME, RESPONSE_DTO_NAME);
         return ControllingEntityCrudResponseDto.builder()
-                .id(controllingEntity.getId())
-                .corporateClient(controllingEntity.getCorporateClient())
-                .name(controllingEntity.getName())
-                .status(controllingEntity.getStatus())
-                .createdAt(controllingEntity.getCreatedAt())
-                .updatedAt(controllingEntity.getUpdatedAt())
+                .id(entity.getId())
+                .corporateClient(entity.getCorporateClient())
+                .name(entity.getName())
+                .status(entity.getStatus())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
     private RuntimeException handleUnexpectedException(String action, Exception e) {
-        log.error("Error {} {}: {}", action, entityName, e.getMessage());
-        return new RuntimeException("Unexpected error while " + action + " " + entityName, e);
+        log.error("Error {} {}: {}", action, ENTITY_NAME, e.getMessage());
+        return new RuntimeException("Unexpected error while " + action + " " + ENTITY_NAME, e);
+    }
+
+    private ControllingEntityCrudResponseDto handleExceptionDuringCreation(Throwable ex) {
+        return handleException("creating", ex);
+    }
+
+    private ControllingEntityCrudResponseDto handleExceptionDuringRetrieval(Throwable ex) {
+        return handleException("retrieving", ex);
+    }
+
+    private ControllingEntityCrudResponseDto handleExceptionDuringUpdate(Throwable ex) {
+        return handleException("updating", ex);
+    }
+
+    private Void handleExceptionDuringDeletion(Throwable ex) {
+        handleException("deleting", ex);
+        return null;
+    }
+
+    private <T> T handleException(String action, Throwable ex) {
+        Throwable cause = ex.getCause();
+        if (cause instanceof EntityNotFoundException) {
+            throw (EntityNotFoundException) cause;
+        }
+        throw handleUnexpectedException(action, (Exception) cause);
     }
 }

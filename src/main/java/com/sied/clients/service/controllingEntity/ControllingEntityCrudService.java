@@ -7,13 +7,13 @@ import com.sied.clients.dto.controllingEntity.response.ControllingEntityCrudResp
 import java.util.concurrent.CompletableFuture;
 
 public interface ControllingEntityCrudService {
-    CompletableFuture<ControllingEntityCrudResponseDto> create(ControllingEntityCrudRequestDto request);
+    CompletableFuture<ControllingEntityCrudResponseDto> createAsync(ControllingEntityCrudRequestDto request);
 
-    CompletableFuture<PaginatedResponse<ControllingEntityCrudResponseDto>> getAll(int offset, int limit);
+    CompletableFuture<PaginatedResponse<ControllingEntityCrudResponseDto>> fetchAll(int offset, int limit);
 
     CompletableFuture<ControllingEntityCrudResponseDto> get(Long id);
 
-    CompletableFuture<ControllingEntityCrudResponseDto> update(ControllingEntityCrudUpdateRequestDto request);
+    CompletableFuture<ControllingEntityCrudResponseDto> updateEntity(ControllingEntityCrudUpdateRequestDto request);
 
-    CompletableFuture<Void> delete(Long id);
+    CompletableFuture<Void> removeById(Long id);
 }
