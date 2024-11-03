@@ -29,7 +29,7 @@ public class ControllingEntityController {
     public CompletableFuture<ResponseEntity<ApiCustomResponse<ControllingEntityCrudResponseDto>>> create(
             @Validated @RequestBody ControllingEntityCrudRequestDto request
     ) {
-        return controllingEntityCrudService.create(request).thenApply(controllingEntity ->
+        return controllingEntityCrudService.createAsync(request).thenApply(controllingEntity ->
                 ResponseEntity.status(HttpStatus.CREATED).body(
                         new ApiCustomResponse<>(
                                 HttpStatus.CREATED.getReasonPhrase(),
@@ -58,11 +58,11 @@ public class ControllingEntityController {
     }
 
     @GetMapping
-    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<ControllingEntityCrudResponseDto>>>> getAll(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<ControllingEntityCrudResponseDto>>>> fetchAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        return controllingEntityCrudService.getAll(offset, limit).thenApply(controllingEntities ->
+        return controllingEntityCrudService.fetchAll(offset, limit).thenApply(controllingEntities ->
                 ResponseEntity.ok(
                         new ApiCustomResponse<>(
                                 HttpStatus.OK.getReasonPhrase(),
@@ -75,10 +75,10 @@ public class ControllingEntityController {
     }
 
     @PutMapping
-    public CompletableFuture<ResponseEntity<ApiCustomResponse<ControllingEntityCrudResponseDto>>> update(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ControllingEntityCrudResponseDto>>> updateEntity(
             @Validated @RequestBody ControllingEntityCrudUpdateRequestDto request
     ) {
-        return controllingEntityCrudService.update(request).thenApply(controllingEntity ->
+        return controllingEntityCrudService.updateEntity(request).thenApply(controllingEntity ->
                 ResponseEntity.ok(
                         new ApiCustomResponse<>(
                                 "Success",
@@ -91,10 +91,10 @@ public class ControllingEntityController {
     }
 
     @DeleteMapping("/{id}")
-    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> removeById(
             @PathVariable Long id
     ) {
-        return controllingEntityCrudService.delete(id).thenApply(voidResult ->
+        return controllingEntityCrudService.removeById(id).thenApply(voidResult ->
                 ResponseEntity.ok(
                         new ApiCustomResponse<>(
                                 HttpStatus.OK.getReasonPhrase(),

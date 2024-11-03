@@ -17,9 +17,13 @@ public class CorporateClientValidationService {
 
     @Async
     public CompletableFuture<CorporateClient> validateCorporateClientExists(Long id) {
-        return CompletableFuture.supplyAsync(() ->
-                corporateClientRepository.findById(id)
-                        .orElseThrow(() -> new EntityNotFoundException("CorporateClient with id " + id + " does not exist."))
-        );
+        return CompletableFuture.supplyAsync(() -> {
+            return corporateClientRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("CorporateClient with id " + id + " does not exist."));
+        }).exceptionally(ex -> {
+            throw new EntityNotFoundException("CorporateClient with id " + id + " not found due to: " + ex.getMessage());
+        });
     }
+
+
 }
