@@ -15,9 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -42,12 +44,13 @@ public class ClientCrudServiceImpl implements ClientCrudService{
     }
 
     @Override
-    public ClientCrudResponseDto create(ClientCrudRequestDto request) {
+    @Async
+    public CompletableFuture<ClientCrudResponseDto> create(ClientCrudRequestDto request) {
         try {
             log.debug("Creating {}", entityName);
             Client client = toEntity(request);
             client = clientRepository.save(client);
-            return toResponseDto(client);
+            return CompletableFuture.completedFuture(toResponseDto(client));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -56,24 +59,26 @@ public class ClientCrudServiceImpl implements ClientCrudService{
     }
 
     @Override
-    public PaginatedResponse<ClientCrudResponseDto> getAll(int offset, int limit) {
+    @Async
+    public CompletableFuture<PaginatedResponse<ClientCrudResponseDto>> getAll(int offset, int limit) {
         try {
             log.debug("Retrieving all {}s", entityName);
-            Page<Client> client = clientRepository.findAll(PageRequest.of(offset, limit));
-            List<ClientCrudResponseDto> clientCrudResponseDtos = client.map(this::toResponseDto).toList();
-            return new PaginatedResponse<>(client.getTotalElements(), client.getTotalPages(), clientCrudResponseDtos);
+            Page<Client> clientPage = clientRepository.findAll(PageRequest.of(offset, limit));
+            List<ClientCrudResponseDto> clientCrudResponseDtos = clientPage.map(this::toResponseDto).toList();
+            return CompletableFuture.completedFuture(new PaginatedResponse<>(clientPage.getTotalElements(), clientPage.getTotalPages(), clientCrudResponseDtos));
         } catch (Exception e) {
             throw handleUnexpectedException("retrieving", e);
         }
     }
 
     @Override
-    public ClientCrudResponseDto get(Long id) {
+    @Async
+    public CompletableFuture<ClientCrudResponseDto> get(Long id) {
         try {
             log.debug("Retrieving {} with ID: {}", entityName, id);
             Client client = clientRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("client.service.invalid.client", new Object[]{id})));
-            return toResponseDto(client);
+            return CompletableFuture.completedFuture(toResponseDto(client));
         } catch (EntityNotFoundException e) {
             log.error("Error retrieving {}: {}", entityName, e.getMessage());
             throw e;
@@ -83,15 +88,16 @@ public class ClientCrudServiceImpl implements ClientCrudService{
     }
 
     @Override
-    public ClientCrudResponseDto update(ClientCrudUpdateRequestDto request) {
+    @Async
+    public CompletableFuture<ClientCrudResponseDto> update(ClientCrudUpdateRequestDto request) {
         try {
             log.debug("Updating {} with id {}", entityName, request.getId());
-            Client client = clientRepository.findById(request.getId()).
-                    orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("client.service.invalid.client", new Object[]{request.getId()})));
+            Client client = clientRepository.findById(request.getId())
+                    .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("client.service.invalid.client", new Object[]{request.getId()})));
             Client updateClient = toEntity(request);
             updateClient.setId(client.getId());
             updateClient = clientRepository.save(updateClient);
-            return toResponseDto(updateClient);
+            return CompletableFuture.completedFuture(toResponseDto(updateClient));
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -100,12 +106,14 @@ public class ClientCrudServiceImpl implements ClientCrudService{
     }
 
     @Override
-    public void delete(Long id) {
+    @Async
+    public CompletableFuture<Void> delete(Long id) {
         try {
             log.debug("Deleting {} with ID: {}", entityName, id);
             Client client = clientRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(messageService.getMessage("client.service.invalid.client", new Object[]{id})));
             clientRepository.delete(client);
+            return CompletableFuture.completedFuture(null);
         } catch (EntityNotFoundException e) {
             log.error("Error deleting {}: {}", entityName, e.getMessage());
             throw e;

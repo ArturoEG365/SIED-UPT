@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+
 @RequestMapping(ApiVersion.V3 + "/clients")
 @RestController
 public class ClientCrudController {
@@ -26,48 +28,72 @@ public class ClientCrudController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiCustomResponse<ClientCrudResponseDto>> create(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ClientCrudResponseDto>>> create(
             @Validated @RequestBody ClientCrudRequestDto request
     ) {
-        ClientCrudResponseDto client = clientCrudService.create(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiCustomResponse<>(HttpStatus.CREATED.getReasonPhrase(), HttpStatus.CREATED.value(), messageService.getMessage("client.controller.create.successfully"), client));
+        return clientCrudService.create(request)
+                .thenApply(client -> ResponseEntity.status(HttpStatus.CREATED)
+                        .body(new ApiCustomResponse<>(
+                                HttpStatus.CREATED.getReasonPhrase(),
+                                HttpStatus.CREATED.value(),
+                                messageService.getMessage("client.controller.create.successfully"),
+                                client
+                        )));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<ClientCrudResponseDto>> get(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ClientCrudResponseDto>>> get(
             @PathVariable Long id
     ) {
-        ClientCrudResponseDto client = clientCrudService.get(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("client.controller.get.successfully"), client));
+        return clientCrudService.get(id)
+                .thenApply(client -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("client.controller.get.successfully"),
+                                client
+                        )));
     }
 
     @GetMapping
-    public ResponseEntity<ApiCustomResponse<PaginatedResponse<ClientCrudResponseDto>>> getAll(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<ClientCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PaginatedResponse<ClientCrudResponseDto> client = clientCrudService.getAll(offset, limit);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("client.controller.getAll.successfully"), client));
+        return clientCrudService.getAll(offset, limit)
+                .thenApply(clientPage -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("client.controller.getAll.successfully"),
+                                clientPage
+                        )));
     }
 
     @PutMapping
-    public ResponseEntity<ApiCustomResponse<ClientCrudResponseDto>> update(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<ClientCrudResponseDto>>> update(
             @Validated @RequestBody ClientCrudUpdateRequestDto request
     ) {
-        ClientCrudResponseDto client = clientCrudService.update(request);
-        ApiCustomResponse<ClientCrudResponseDto> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("client.controller.update.successfully"), client);
-        return ResponseEntity.ok(response);
+        return clientCrudService.update(request)
+                .thenApply(client -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                "Success",
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("client.controller.update.successfully"),
+                                client
+                        )));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<Void>> delete(
+    public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
     ) {
-        clientCrudService.delete(id);
-
-        return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("client.controller.delete.successfully")));
+        return clientCrudService.delete(id)
+                .thenApply(v -> ResponseEntity.ok(
+                        new ApiCustomResponse<>(
+                                HttpStatus.OK.getReasonPhrase(),
+                                HttpStatus.OK.value(),
+                                messageService.getMessage("client.controller.delete.successfully")
+                        )));
     }
 }

@@ -20,3 +20,4 @@ public class ClientCrudRequestDto {
     @Size(min = 1, max = 50, message = "{client.dto.client_type.size}")
     private String clientType;
 }
+//client dto
