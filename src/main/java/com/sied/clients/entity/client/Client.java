@@ -62,3 +62,4 @@ public class Client {
         this.updatedAt = LocalDateTime.now();
     }
 }
+//client entity

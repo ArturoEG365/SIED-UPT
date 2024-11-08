@@ -8,3 +8,4 @@ public class ClientCrudUpdateRequestDto extends ClientCrudRequestDto {
     @NotNull(message = "{client.dto.id.notNull}")
     private Long id;
 }
+//client dto

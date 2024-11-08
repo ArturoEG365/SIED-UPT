@@ -4,15 +4,16 @@ import com.sied.clients.base.responses.PaginatedResponse;
 import com.sied.clients.dto.client.request.ClientCrudUpdateRequestDto;
 import com.sied.clients.dto.client.request.ClientCrudRequestDto;
 import com.sied.clients.dto.client.response.ClientCrudResponseDto;
+import java.util.concurrent.CompletableFuture;
 
 public interface ClientCrudService {
-    ClientCrudResponseDto create(ClientCrudRequestDto request);
+    CompletableFuture<ClientCrudResponseDto> create(ClientCrudRequestDto request);
 
-    PaginatedResponse<ClientCrudResponseDto> getAll(int offset, int limit);
+    CompletableFuture<PaginatedResponse<ClientCrudResponseDto>> getAll(int offset, int limit);
 
-    ClientCrudResponseDto get(Long id);
+    CompletableFuture<ClientCrudResponseDto> get(Long id);
 
-    ClientCrudResponseDto update(ClientCrudUpdateRequestDto request);
+    CompletableFuture<ClientCrudResponseDto> update(ClientCrudUpdateRequestDto request);
 
-    void delete(Long id);
+    CompletableFuture<Void> delete(Long id);
 }
