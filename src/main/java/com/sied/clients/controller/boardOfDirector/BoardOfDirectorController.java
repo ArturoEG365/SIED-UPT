@@ -14,17 +14,35 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Controlador REST para la gestión de la entidad BoardOfDirector.
+ * Proporciona endpoints para crear, obtener, actualizar y eliminar registros
+ * de miembros de la junta directiva de manera asíncrona.
+ */
 @RequestMapping(ApiVersion.V3 + "/board_of_directors")
 @RestController
 public class BoardOfDirectorController {
+
     private final BoardOfDirectorCrudService boardOfDirectorCrudService;
     private final MessageService messageService;
 
+    /**
+     * Constructor para la clase BoardOfDirectorController.
+     *
+     * @param boardOfDirectorCrudService Servicio para las operaciones CRUD de BoardOfDirector.
+     * @param messageService Servicio para mensajes personalizados en las respuestas.
+     */
     public BoardOfDirectorController(BoardOfDirectorCrudService boardOfDirectorCrudService, MessageService messageService) {
         this.boardOfDirectorCrudService = boardOfDirectorCrudService;
         this.messageService = messageService;
     }
 
+    /**
+     * Crea un nuevo registro de BoardOfDirector.
+     *
+     * @param request DTO que contiene los datos del BoardOfDirector a crear.
+     * @return Un CompletableFuture con la respuesta HTTP, incluyendo el DTO del BoardOfDirector creado.
+     */
     @PostMapping
     public CompletableFuture<ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>>> create(
             @Validated @RequestBody BoardOfDirectorCrudRequestDto request
@@ -41,6 +59,12 @@ public class BoardOfDirectorController {
         );
     }
 
+    /**
+     * Obtiene un BoardOfDirector por su ID.
+     *
+     * @param id ID del BoardOfDirector a obtener.
+     * @return Un CompletableFuture con la respuesta HTTP, incluyendo el DTO del BoardOfDirector obtenido.
+     */
     @GetMapping("/{id}")
     public CompletableFuture<ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>>> get(
             @PathVariable Long id
@@ -57,6 +81,13 @@ public class BoardOfDirectorController {
         );
     }
 
+    /**
+     * Obtiene una lista paginada de todos los BoardOfDirector.
+     *
+     * @param offset Índice de inicio para la paginación.
+     * @param limit Cantidad máxima de registros a devolver.
+     * @return Un CompletableFuture con la respuesta HTTP, incluyendo una lista paginada de BoardOfDirector.
+     */
     @GetMapping
     public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<BoardOfDirectorCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
@@ -74,6 +105,12 @@ public class BoardOfDirectorController {
         );
     }
 
+    /**
+     * Actualiza un registro de BoardOfDirector.
+     *
+     * @param request DTO que contiene los datos actualizados del BoardOfDirector.
+     * @return Un CompletableFuture con la respuesta HTTP, incluyendo el DTO del BoardOfDirector actualizado.
+     */
     @PutMapping
     public CompletableFuture<ResponseEntity<ApiCustomResponse<BoardOfDirectorCrudResponseDto>>> update(
             @Validated @RequestBody BoardOfDirectorCrudUpdateRequestDto request
@@ -90,6 +127,12 @@ public class BoardOfDirectorController {
         );
     }
 
+    /**
+     * Elimina un BoardOfDirector por su ID.
+     *
+     * @param id ID del BoardOfDirector a eliminar.
+     * @return Un CompletableFuture con la respuesta HTTP que indica el éxito de la operación.
+     */
     @DeleteMapping("/{id}")
     public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
