@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+
 @RequestMapping(ApiVersion.V3 + "/related_pep")
 @RestController
 public class RelatedPepCrudController {
@@ -26,39 +28,39 @@ public class RelatedPepCrudController {
 
 
     @PostMapping
-    public ResponseEntity<ApiCustomResponse<RelatedPepCrudResponseDto>> create(
+    public ResponseEntity<ApiCustomResponse<CompletableFuture<RelatedPepCrudResponseDto>>> create(
             @Validated @RequestBody RelatedPepCrudRequestDto request
     ) {
-        RelatedPepCrudResponseDto relatedPep = relatedPepCrudService.create(request);
+        CompletableFuture<RelatedPepCrudResponseDto> relatedPep = relatedPepCrudService.create(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiCustomResponse<>(HttpStatus.CREATED.getReasonPhrase(), HttpStatus.CREATED.value(), messageService.getMessage("relatedPep.controller.create.successfully"), relatedPep));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiCustomResponse<RelatedPepCrudResponseDto>> get(
+    public ResponseEntity<ApiCustomResponse<CompletableFuture<RelatedPepCrudResponseDto>>> get(
             @PathVariable Long id
     ) {
-        RelatedPepCrudResponseDto relatedPep = relatedPepCrudService.get(id);
+        CompletableFuture<RelatedPepCrudResponseDto> relatedPep = relatedPepCrudService.get(id);
 
         return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("relatedPep.controller.get.successfully"), relatedPep));
     }
 
     @GetMapping
-    public ResponseEntity<ApiCustomResponse<PaginatedResponse<RelatedPepCrudResponseDto>>> getAll(
+    public ResponseEntity<ApiCustomResponse<CompletableFuture<PaginatedResponse<RelatedPepCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit
     ) {
-        PaginatedResponse<RelatedPepCrudResponseDto> relatedPep = relatedPepCrudService.getAll(offset, limit);
+        CompletableFuture<PaginatedResponse<RelatedPepCrudResponseDto>> relatedPep = relatedPepCrudService.getAll(offset, limit);
 
         return ResponseEntity.ok(new ApiCustomResponse<>(HttpStatus.OK.getReasonPhrase(), HttpStatus.OK.value(), messageService.getMessage("relatedPep.controller.getAll.successfully"), relatedPep));
     }
 
     @PutMapping
-    public ResponseEntity<ApiCustomResponse<RelatedPepCrudResponseDto>> update(
+    public ResponseEntity<ApiCustomResponse<CompletableFuture<RelatedPepCrudResponseDto>>> update(
             @Validated @RequestBody RelatedPepCrudUpdateRequestDto request
     ) {
-        RelatedPepCrudResponseDto relatedPep = relatedPepCrudService.update(request);
-        ApiCustomResponse<RelatedPepCrudResponseDto> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("relatedPep.controller.update.successfully"), relatedPep);
+        CompletableFuture<RelatedPepCrudResponseDto> relatedPep = relatedPepCrudService.update(request);
+        ApiCustomResponse<CompletableFuture<RelatedPepCrudResponseDto>> response = new ApiCustomResponse<>("Success", HttpStatus.OK.value(), messageService.getMessage("relatedPep.controller.update.successfully"), relatedPep);
         return ResponseEntity.ok(response);
     }
 
