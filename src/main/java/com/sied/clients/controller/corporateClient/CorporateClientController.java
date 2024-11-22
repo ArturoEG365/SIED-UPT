@@ -14,17 +14,34 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * REST controller for managing Corporate Client operations.
+ * Provides endpoints for creating, retrieving, updating, and deleting corporate clients.
+ */
 @RequestMapping(ApiVersion.V3 + "/corporate_clients")
 @RestController
 public class CorporateClientController {
+
     private final CorporateClientCrudService corporateClientCrudService;
     private final MessageService messageService;
 
+    /**
+     * Constructor to initialize the controller with required services.
+     *
+     * @param corporateClientService the service to handle corporate client CRUD operations
+     * @param messageService         the service for retrieving localized messages
+     */
     public CorporateClientController(CorporateClientCrudService corporateClientService, MessageService messageService) {
         this.corporateClientCrudService = corporateClientService;
         this.messageService = messageService;
     }
 
+    /**
+     * Creates a new corporate client.
+     *
+     * @param request the corporate client data to create
+     * @return a CompletableFuture containing the created corporate client wrapped in a custom API response
+     */
     @PostMapping
     public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>>> create(
             @Validated @RequestBody CorporateClientCrudRequestDto request
@@ -41,6 +58,12 @@ public class CorporateClientController {
         );
     }
 
+    /**
+     * Retrieves a corporate client by its ID.
+     *
+     * @param id the ID of the corporate client to retrieve
+     * @return a CompletableFuture containing the retrieved corporate client wrapped in a custom API response
+     */
     @GetMapping("/{id}")
     public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>>> get(
             @PathVariable Long id
@@ -57,6 +80,13 @@ public class CorporateClientController {
         );
     }
 
+    /**
+     * Retrieves a paginated list of corporate clients.
+     *
+     * @param offset the starting index for pagination
+     * @param limit  the maximum number of items to return
+     * @return a CompletableFuture containing the paginated list of corporate clients wrapped in a custom API response
+     */
     @GetMapping
     public CompletableFuture<ResponseEntity<ApiCustomResponse<PaginatedResponse<CorporateClientCrudResponseDto>>>> getAll(
             @RequestParam(defaultValue = "0") int offset,
@@ -74,6 +104,12 @@ public class CorporateClientController {
         );
     }
 
+    /**
+     * Updates an existing corporate client.
+     *
+     * @param request the updated corporate client data
+     * @return a CompletableFuture containing the updated corporate client wrapped in a custom API response
+     */
     @PutMapping
     public CompletableFuture<ResponseEntity<ApiCustomResponse<CorporateClientCrudResponseDto>>> update(
             @Validated @RequestBody CorporateClientCrudUpdateRequestDto request
@@ -90,6 +126,12 @@ public class CorporateClientController {
         );
     }
 
+    /**
+     * Deletes a corporate client by its ID.
+     *
+     * @param id the ID of the corporate client to delete
+     * @return a CompletableFuture containing a success message wrapped in a custom API response
+     */
     @DeleteMapping("/{id}")
     public CompletableFuture<ResponseEntity<ApiCustomResponse<Void>>> delete(
             @PathVariable Long id
